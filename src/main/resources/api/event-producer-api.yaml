@@ -11,24 +11,47 @@ info:
       name: Team Lumberjack
       email: team-lumberjack@zalando.ie
 
-#basePath: /api
-#produces:
-#  - application/json
-
 paths: 
   /new-events:
     parameters:
       - $ref: '#/parameters/Flow-Id'
     get:
       summary: retrieve a bunch of new events
-      description: bla bla bla
+      description:
+        Retrieve some of the new events. The response will support pagination by a `next` link,
+        using a cursor, assuming there are actually more events.
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          type: string
+          description:
+            A cursor for pagination. Usually this parameter will only be set in the `next` links
+            from responses to this service.
+        - name: limit
+          in: query
+          required: false
+          type: integer
+          description:
+            How many new events will be returned at most.
+            The producer can decide to support a lower limit, and will impose
+            a sensible default value if this parameter is missing. (Of course,
+            the producer will never return more events than are actually available.)  
       responses:
         200:
-          description: OK
+          description: Retrieval was successful.
+          headers:
+            Link:
+              type: string
+              description: |
+                Links to related resources, in the format defined by
+                [RFC 5988](https://tools.ietf.org/html/rfc5988#section-5).
+                This will include a link with relation type `next` to the
+                next page, if there is a next page.
           schema:
             $ref: '#/definitions/Bunch-of-Events'
 
-  /event/{eid}/status:
+  /events/{eid}/status:
     parameters:
       - $ref: '#/parameters/Flow-Id'
       - name: eid
@@ -36,9 +59,10 @@ paths:
         type: string
         description: the event identifier.
         required: true
-    put:
+    post:
       summary: update the status of the event delivery.
-      description: This updates the status of the event delivery.
+      description:
+        This updates the status of the event delivery.
       parameters:
         - name: update
           in: body
@@ -78,8 +102,13 @@ definitions:
             type: object
             properties:
               href:
+                description:
+                  A link to the next page of event items. This is in the form of a URI
+                  reference, and will be resolved by Tarbela using GET.
                 type: string
                 format: uri
+                x-interfaces:
+                  - $ref: '#/paths/~1new-events'
       events:
         type: array
         items:
@@ -93,23 +122,29 @@ definitions:
     properties:
       _links:
         type: object
+        required:
+          - status_update
         properties:
           status_update:
             type: object
+            required:
+              - href
             properties:
               href:
                 type: string
                 format: uri
                 description:
-                  Tarbela will use this URI with a PUT to send the status update.
-                x-interface:
-                  $ref: '#/paths/~1event~1{id}~1status'
+                  Tarbela will use this URI with a POST to send the status update.
+                x-interfaces:
+                  - $ref: '#/paths/~1events~1{eid}~1status'
       data:
         description: |
-          The JSON data payload to be sent to Nakadi. TODO: Is this an
-          object or a string?
+          The JSON data payload to be sent to Nakadi.
         type: object
       metadata:
+        description:
+          Meta data about this event. Most of it will be simply passed forward to Nakadi,
+          though the `event_type` field will be used to decide the submission URI. 
         type: object
         properties:
           eid:
