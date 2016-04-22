@@ -6,10 +6,18 @@ info:
       need to be published to Nakadi (or maybe to other event message sinks).
       After delivery Tarbela will use the status_update links to inform the producers
       about the success (or the failure).
-  version: '0.1'
+      
+      Here is a sketch of the architecture:
+      
+            Producer  ←––– this REST API ←–––– Tarbela  –––––––→ Nakadi
+           (stateful)                        (publisher,         (stateful
+                                              stateless)         message queue)
+      
+  version: '0.2'
   contact:
-      name: Team Lumberjack
-      email: team-lumberjack@zalando.ie
+      name: Zalando Tech, Team Lumberjack + Tarbela Contributors
+      url: https://github.com/zalando/tarbela
+      email: team-lumberjack@zalando.de
 
 paths: 
   /new-events:
@@ -27,7 +35,7 @@ paths:
           type: string
           description:
             A cursor for pagination. Usually this parameter will only be set in the `next` links
-            from responses to this service.
+            from responses to this service. Tarbela will not invent any cursors.
         - name: limit
           in: query
           required: false
@@ -38,7 +46,7 @@ paths:
             a sensible default value if this parameter is missing. (Of course,
             the producer will never return more events than are actually available.)  
       responses:
-        200:
+        '200':
           description: Retrieval was successful.
           headers:
             Link:
@@ -50,6 +58,19 @@ paths:
                 next page, if there is a next page.
           schema:
             $ref: '#/definitions/Bunch-of-Events'
+        '400':
+          description: invalid request, e.g. cursor or limit parameters are invalid
+          schema:
+            $ref: '#/definitions/Problem'
+        '500':
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/Problem'
+        '503':
+          description: Service not available.
+          schema:
+            $ref: '#/definitions/Problem'
+        # other 4xx/5xx responses are possible too.
 
   /events/{eid}/status:
     parameters:
@@ -57,12 +78,19 @@ paths:
       - name: eid
         in: path
         type: string
-        description: the event identifier.
+        description:
+          the event identifier. (Tarbela will not fill this manually, but take
+          the link from the /new-events response.)
         required: true
     post:
       summary: update the status of the event delivery.
       description:
-        This updates the status of the event delivery.
+        This informs the producer about the status of the event delivery.
+        In the case of SENT, the producer will remove the event from the
+        list of events available via '/new-events', as it is already sent
+        to any consumers.
+        In the case or ERROR, the producer might still let the event in the
+        queue, so it can be tried again later. 
       parameters:
         - name: update
           in: body
@@ -74,19 +102,36 @@ paths:
                 enum:
                   - SENT
                   - ERROR
-                  - NEW
               delivery_error:
                 $ref: '#/definitions/Problem'
       responses:
-        200:
-          description: OK
-    
+        '200':
+          description: OK, update was done. 
+        '400':
+          description: invalid request, e.g. invalid body object.
+          schema:
+            $ref: '#/definitions/Problem'
+        '404':
+          description:
+            There is no event with this eid. (This should usually not happen
+            if the link was followed from /new-events response.)
+          schema:
+            $ref: '#/definitions/Problem'
+        '500':
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/Problem'
+        '503':
+          description: Service not available.
+          schema:
+            $ref: '#/definitions/Problem'
+        # other 4xx/5xx responses are possible too.
 
 parameters:
   Flow-Id:
     name: X-Flow-ID
     description: |
-      A custom header that will be passed onto any further requests and can be used for diagnosing.
+      A custom header that will be used for logging, and passed onto any further requests and can be used for diagnosing.
     in: header
     type: string
     required: false
