@@ -149,10 +149,28 @@
                             <!-- the \u002c will be parsed as a comma by Javac,
                                  but this way it will survive the tokenization by codegen -->
                             <type-mappings>EventPayload=java.util.HashMap&lt;String\u002c Object&gt;</type-mappings>
-                            <sourceFolder></sourceFolder>
                           </configOptions>
                           <environmentVariables>
                              <models></models>
+                          </environmentVariables>
+                      </configuration>
+                  </execution>
+                  <execution>
+                      <id>nakadi-api</id>
+                      <goals>
+                          <goal>generate</goal>
+                      </goals>
+                      <configuration>
+                          <output>target/generated-sources/swagger-codegen</output>
+                          <inputSpec>src/main/resources/api/nakadi-event-bus-api.yaml</inputSpec>
+                          <language>springinterfacesNoSwaggerAnnotations</language>
+                          <configOptions>
+                            <modelPackage>org.zalando.tarbela.nakadi.models</modelPackage>
+                            <apiPackage>org.zalando.tarbela.nakadi.api</apiPackage>
+                            <invokerPackage>org.zalando.tarbela.nakadi</invokerPackage>
+                          </configOptions>
+                          <environmentVariables>
+                              <models>BatchItemResponse,Problem</models>
                           </environmentVariables>
                       </configuration>
                   </execution>
