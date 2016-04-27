@@ -4,8 +4,8 @@ info:
   description: |
       This API will be used by Tarbela to access events from a producer, which
       need to be published to Nakadi (or maybe to other event message sinks).
-      After delivery Tarbela will use the status_update links to inform the producers
-      about the success (or the failure).
+      After delivery Tarbela will use the status_update links to inform the
+      producers about the success (or the failure).
       
       Here is a sketch of the architecture:
       
@@ -20,109 +20,69 @@ info:
       email: team-lumberjack@zalando.de
 
 paths: 
-  /new-events:
+  /events:
     parameters:
       - $ref: '#/parameters/Flow-Id'
     get:
       summary: retrieve a bunch of new events
       description:
-        Retrieve some of the new events. The response will support pagination by a `next` link,
-        using a cursor, assuming there are actually more events.
+        Retrieve some of the new events. The response will support pagination
+        by a `next` link, using a cursor, assuming there are actually more
+        events.
       parameters:
         - name: cursor
           in: query
           required: false
           type: string
           description:
-            A cursor for pagination. Usually this parameter will only be set in the `next` links
-            from responses to this service. Tarbela will not invent any cursors.
+            A cursor for pagination. Usually this parameter will only be set
+            in the `next` links from responses to this service. Tarbela will
+            follow this links, but not impose any other meaning into this
+            parameter.
+        - name: status
+          in: query
+          required: false
+          type: string
+          description:
+            If used, filters the retrieved events by status.
         - name: limit
           in: query
           required: false
           type: integer
           description:
-            How many new events will be returned at most.
+            How many events will be returned at most.
             The producer can decide to support a lower limit, and will impose
             a sensible default value if this parameter is missing. (Of course,
-            the producer will never return more events than are actually available.)  
+            the producer will never return more events than are actually
+            available.)
       responses:
         '200':
           description: Retrieval was successful.
-          headers:
-            Link:
-              type: string
-              description: |
-                Links to related resources, in the format defined by
-                [RFC 5988](https://tools.ietf.org/html/rfc5988#section-5).
-                This will include a link with relation type `next` to the
-                next page, if there is a next page.
           schema:
             $ref: '#/definitions/Bunch-of-Events'
         '400':
-          description: invalid request, e.g. cursor or limit parameters are invalid
-          schema:
-            $ref: '#/definitions/Problem'
-        '500':
-          description: Internal server error.
-          schema:
-            $ref: '#/definitions/Problem'
-        '503':
-          description: Service not available.
+          description:
+            invalid request, e.g. cursor or limit parameters are invalid,
+            or unknown status
           schema:
             $ref: '#/definitions/Problem'
         # other 4xx/5xx responses are possible too.
-
-  /events/{eid}/status:
-    parameters:
-      - $ref: '#/parameters/Flow-Id'
-      - name: eid
-        in: path
-        type: string
-        description:
-          the event identifier. (Tarbela will not fill this manually, but take
-          the link from the /new-events response.)
-        required: true
-    post:
-      summary: update the status of the event delivery.
-      description:
-        This informs the producer about the status of the event delivery.
-        In the case of SENT, the producer will remove the event from the
-        list of events available via '/new-events', as it is already sent
-        to any consumers.
-        In the case or ERROR, the producer might still let the event in the
-        queue, so it can be tried again later. 
+    patch:
       parameters:
-        - name: update
-          in: body
+        - in: body
+          name: update
           schema:
-            type: object
-            properties:
-              status:
-                type: string
-                enum:
-                  - SENT
-                  - ERROR
-              delivery_error:
-                $ref: '#/definitions/Problem'
+            $ref: "#/definitions/Bunch-of-EventUpdates"
+          required: true
+      description:
+        Updates the publishing statuses of some events. This is used to inform
+        the producer when a event was successfully delivered to the event sink
+        or when it couldn't be delivered.
       responses:
         '200':
           description: OK, update was done. 
         '400':
           description: invalid request, e.g. invalid body object.
-          schema:
-            $ref: '#/definitions/Problem'
-        '404':
-          description:
-            There is no event with this eid. (This should usually not happen
-            if the link was followed from /new-events response.)
-          schema:
-            $ref: '#/definitions/Problem'
-        '500':
-          description: Internal server error.
-          schema:
-            $ref: '#/definitions/Problem'
-        '503':
-          description: Service not available.
           schema:
             $ref: '#/definitions/Problem'
         # other 4xx/5xx responses are possible too.
@@ -131,12 +91,19 @@ parameters:
   Flow-Id:
     name: X-Flow-ID
     description: |
-      A custom header that will be used for logging, and passed onto any further requests and can be used for diagnosing.
+      A custom header that will be used for logging, and passed onto any
+      further requests and can be used for diagnosing.
     in: header
     type: string
     required: false
   
 definitions:
+  DeliveryStatus:
+    type: string
+    description: |
+      The delivery status of an event. (TODO: The possible values are still
+      under discussion.)
+
   Bunch-of-Events:
     type: object
     properties:
@@ -148,111 +115,98 @@ definitions:
             properties:
               href:
                 description:
-                  A link to the next page of event items. This is in the form of a URI
+                  A link to the next page of event items (using the same
+                  filtering as this one). This is in the form of a URI
                   reference, and will be resolved by Tarbela using GET.
                 type: string
                 format: uri
                 x-interfaces:
-                  - $ref: '#/paths/~1new-events'
+                  - $ref: '#/paths/~1events'
       events:
         type: array
         items:
           $ref: "#/definitions/Event"
   Event:
     description:
-      An event which will be delivered to Nakadi. For a data change event
-      the data_type and data_op fields are required too, for business events
-      not.
+      An event which will be delivered to Nakadi (or other event sinks),
+      together with some metadata used by Tarbela.
     type: object
     properties:
-      _links:
-        type: object
-        required:
-          - status_update
-        properties:
-          status_update:
-            type: object
-            required:
-              - href
-            properties:
-              href:
-                type: string
-                format: uri
-                description:
-                  Tarbela will use this URI with a POST to send the status update.
-                x-interfaces:
-                  - $ref: '#/paths/~1events~1{eid}~1status'
-      data:
-        description: |
-          The JSON data payload to be sent to Nakadi.
-        type: object
-      metadata:
+      event_id:
+        type: string
         description:
-          Meta data about this event. Most of it will be simply passed forward to Nakadi,
-          though the `event_type` field will be used to decide the submission URI. 
+          An identifier for the event, for identification use between Tarbela
+          and the producer. This identifier should uniquely identify the event
+          inside the producer.
+      delivery_status:
+        $ref: '#/definitions/DeliveryStatus'
+      event_payload:
+        type: object
+        description:
+          The actual event to be sent to Nakadi or other event sinks, in the
+          format recognized by this sink. Tarbela will not modify this object,
+          but simply send it as-is.
+        additionalProperties: {}
+      channel_v1:
+        description: |
+          The channel identifier, consisting of a protocol and an submission
+          URI. (TODO: This is one of the possible variants. See channel_v2 for
+          the other one.)
         type: object
         properties:
-          eid:
-            description: |
-              Identifier of this Event.
-              Clients MUST generate this value and it SHOULD be guaranteed to be unique from the
-              perspective of the producer. Consumers MIGHT use this value to assert uniqueness of reception
-              of the Event.
+          protocol:
+            description:
+              The type of event sink where this event should be sent to.
+              Initially the only supported value is `nakadi` (for the Nakadi
+              event bus system available at https://github.com/zalando/nakadi/),
+              later other types of event sinks might be supported.
             type: string
-            example: '105a76d8-db49-4144-ace7-e683e8f4ba46'
-          event_type:
-            description: |
-              The EventType of this Event. This will decide which Nakadi topic this event will be sent to.
+            example: nakadi
+          submission_uri:
             type: string
-            example: 'pennybags.payment-business-event'
-          occurred_at:
-            description: |
-              Timestamp of creation of the Event generated by the producer.
-            type: string
-            format: date-time
-            example: '1996-12-19T16:39:57-08:00'
-          parent_eids:
-            type: array
-            items:
-              type: string
-              format: uuid
-            description: |
-              Event identifier of the Event that caused the generation of this Event.
-              Set by the producer.
-            example: '105a76d8-db49-4144-ace7-e683e8f4ba46'
-          flow_id:
-            description: |
-              The flow-id of the producer of this Event.
-            type: string
-            example: 'JAh6xH4OQhCJ9PutIV_RYw'
-          partition:
-            description: |
-              Indicates the partition assigned to this Event.
-              Required to be set by the client if partition strategy of the EventType is 'user_defined'.
-            type: string
-            example: '0'
-        required:
-          - eid
-          - occurred_at
-          - event_type
-        additionalProperties: false
-      data_type:
-        type: string
-        example: 'pennybags:order'
-      data_op:
-        type: string
-        enum: ['C', 'U', 'D', 'S']
+            description:
+              The submission URI of event sink. The event will be sent there,
+              maybe together with other events of the same protocol + submission
+              URI combination (depending on the protocol).
+      channel_v2:
         description: |
-          The type of operation executed on the entity.
-          * C: Creation
-          * U: Update
-          * D: Deletion
-          * S: Snapshot
+          The channel identifier, consisting of a sink identifier and a topic
+          name. (TODO: This is one of the possible variants. See channel_v1
+          for the other one.)
+        type: object
+        properties:
+          sink_identifier:
+            type: string
+            description:
+              An identifier for the event sink. This identifier needs to be
+              configured in Tarbela's configuration.
+          topic_name:
+            type: string
+            description:
+              The name of the topic/channel/event type/... in the event sink.
+              For Nakadi, this is the "event type".
 
-    required:
-      - metadata
-      - data
-      - _links
+  Bunch-of-EventUpdates:
+    type: object
+    properties:
+      events:
+        type: array
+        items:
+          $ref: "#/definitions/EventUpdate"
+
+  EventUpdate:
+    description:
+      An update to a single event, to be written back to the producer.
+      Tarbela can only update the publishing status of an event.
+    type: object
+    properties:
+      event_id:
+        type: string
+        description:
+          An identifier for this event. This will be taken from the same-named
+          field in TarbelaEvent.
+      delivery_status:
+        $ref: '#/definitions/DeliveryStatus'
       
   Problem:
     type: object
