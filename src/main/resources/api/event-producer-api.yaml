@@ -177,7 +177,7 @@ definitions:
         properties:
           sink_identifier:
             type: string
-            description:
+            description: |
               An identifier for the event sink. This identifier needs to be
               configured in Tarbela's configuration.
           topic_name:
