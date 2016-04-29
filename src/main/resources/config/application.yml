@@ -1,0 +1,29 @@
+tokens:
+    accessTokenUri: https://token.services.auth.zalando.com/oauth2/access_token?realm=/services
+  ### TODO!!!! change this
+    credentialsDirectory: ${user.home}/.purchasing_backend/meta/credentials
+
+
+spring:
+  oauth2:
+    resource:
+      tokenInfoUri: https://info.services.auth.zalando.com/oauth2/tokeninfo
+
+
+logbook:
+  filter.enabled: true
+  format.style: json
+  obfuscate:
+    headers:
+      - Authorization
+      - X-Secret
+    parameters:
+      - access_token
+  write:
+    category: http.traffic
+    level: INFO
+
+management.port: 7979
+
+logging.pattern.console: "%date {%level} [%thread] [%X{X-FLOW-ID}] [%logger] %message%n"
+logging.pattern.file: "%date {%level} [%thread] [%X{X-FLOW-ID}] [%logger] %message%n"

@@ -1,0 +1,8 @@
+tokens:
+    token-configuration-list:
+        - tokenId: producer
+          scopes:
+              - uid
+              - producer.event_stream.read
+        - tokenId: nakadi
+          scopes: nakadi.event_stream.write
