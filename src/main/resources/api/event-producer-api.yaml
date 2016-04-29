@@ -13,7 +13,7 @@ info:
            (stateful)                        (publisher,         (stateful
                                               stateless)         message queue)
       
-  version: '0.2'
+  version: '0.3'
   contact:
       name: Zalando Tech, Team Lumberjack + Tarbela Contributors
       url: https://github.com/zalando/tarbela
@@ -147,32 +147,32 @@ definitions:
           format recognized by this sink. Tarbela will not modify this object,
           but simply send it as-is.
         additionalProperties: {}
-      channel_v1:
-        description: |
-          The channel identifier, consisting of a protocol and an submission
-          URI. (TODO: This is one of the possible variants. See channel_v2 for
-          the other one.)
-        type: object
-        properties:
-          protocol:
-            description:
-              The type of event sink where this event should be sent to.
-              Initially the only supported value is `nakadi` (for the Nakadi
-              event bus system available at https://github.com/zalando/nakadi/),
-              later other types of event sinks might be supported.
-            type: string
-            example: nakadi
-          submission_uri:
-            type: string
-            description:
-              The submission URI of event sink. The event will be sent there,
-              maybe together with other events of the same protocol + submission
-              URI combination (depending on the protocol).
-      channel_v2:
+#      channel_v1:
+#        description: |
+#          The channel identifier, consisting of a protocol and an submission
+#          URI. (TODO: This is one of the possible variants. See channel_v2 for
+#          the other one.)
+#        type: object
+#        properties:
+#          protocol:
+#            description:
+#              The type of event sink where this event should be sent to.
+#              Initially the only supported value is `nakadi` (for the Nakadi
+#              event bus system available at https://github.com/zalando/nakadi/),
+#              later other types of event sinks might be supported.
+#            type: string
+#            example: nakadi
+#          submission_uri:
+#            type: string
+#            description:
+#              The submission URI of event sink. The event will be sent there,
+#              maybe together with other events of the same protocol + submission
+#              URI combination (depending on the protocol).
+      channel:
         description: |
           The channel identifier, consisting of a sink identifier and a topic
-          name. (TODO: This is one of the possible variants. See channel_v1
-          for the other one.)
+          name. (We are going for this in the prototype, it might be changed
+          later.)
         type: object
         properties:
           sink_identifier:
