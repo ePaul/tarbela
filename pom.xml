@@ -16,6 +16,8 @@
 
     <properties>
         <java.version>1.8</java.version>
+        <zalando-swagger-codegen-plugin-version>0.4.24</zalando-swagger-codegen-plugin-version>
+        <swagger-codegen-plugin-version>2.1.6</swagger-codegen-plugin-version>
     </properties>
 
     <dependencies>
@@ -93,6 +95,45 @@
 
     <build>
         <finalName>${project.artifactId}</finalName>
+        <plugins>
+           <plugin>
+              <groupId>io.swagger</groupId>
+              <artifactId>swagger-codegen-maven-plugin</artifactId>
+              <version>${swagger-codegen-plugin-version}</version>
+              <executions>
+                  <execution>
+                      <id>producer-api</id>
+                      <goals>
+                          <goal>generate</goal>
+                      </goals>
+                      <configuration>
+                          <output>target/generated-sources/swagger-codegen</output>
+                          <inputSpec>src/main/resources/api/event-producer-api.yaml</inputSpec>
+                          <language>springinterfacesNoSwaggerAnnotations</language>
+                          <configOptions>
+                            <modelPackage>org.zalando.tarbela.producer.models</modelPackage>
+                            <apiPackage>org.zalando.tarbela.producer.api</apiPackage>
+                            <invokerPackage>org.zalando.tarbela.producer</invokerPackage>
+                            <!-- the \u002c will be parsed as a comma by Javac,
+                                 but this way it will survive the tokenization by codegen -->
+                            <type-mappings>EventPayload=java.util.HashMap&lt;String\u002c Object&gt;</type-mappings>
+                            <sourceFolder></sourceFolder>
+                          </configOptions>
+                          <environmentVariables>
+                             <models></models>
+                          </environmentVariables>
+                      </configuration>
+                  </execution>
+              </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.zalando.stups</groupId>
+                        <artifactId>swagger-codegen-template-spring-interfaces</artifactId>
+                        <version>${zalando-swagger-codegen-plugin-version}</version>
+                    </dependency>
+                </dependencies>
+           </plugin>
+        </plugins>
     </build>
 
 </project>
