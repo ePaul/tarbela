@@ -1,5 +1,6 @@
 tokens:
     accessTokenUri: https://token.services.auth.zalando.com/oauth2/access_token?realm=/services
+    tokenInfoUri: https://info.services.auth.zalando.com/oauth2/tokeninfo
   ### TODO!!!! change this
     credentialsDirectory: ${user.home}/.purchasing_backend/meta/credentials
 

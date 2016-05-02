@@ -3,6 +3,6 @@ tokens:
         - tokenId: producer
           scopes:
               - uid
-              - producer.event_stream.read
-        - tokenId: nakadi
-          scopes: nakadi.event_stream.write
+              - warehouse-allocation.read
+#        - tokenId: nakadi
+#          scopes: nakadi.event_stream.write
