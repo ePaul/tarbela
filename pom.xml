@@ -18,9 +18,16 @@
         <java.version>1.8</java.version>
         <zalando-swagger-codegen-plugin-version>0.4.24</zalando-swagger-codegen-plugin-version>
         <swagger-codegen-plugin-version>2.1.6</swagger-codegen-plugin-version>
+        <riptide.version>1.1.0</riptide.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.zalando</groupId>
+            <artifactId>riptide</artifactId>
+            <version>${riptide.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -44,7 +51,6 @@
         <dependency>
             <groupId>org.springframework.hateoas</groupId>
             <artifactId>spring-hateoas</artifactId>
-            <version>0.19.0.RELEASE</version>
         </dependency>
 
         <dependency>

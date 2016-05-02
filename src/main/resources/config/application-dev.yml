@@ -15,7 +15,7 @@ tokens:
           scopes:
               - uid
               - warehouse-allocation.read
-#        - tokenId: nakadi
-#          scopes: nakadi.event_stream.write
+        - tokenId: zalando-nakadi
+          scopes: nakadi.event_stream.write
 
 producer.events.uri: http://localhost:8085/events
