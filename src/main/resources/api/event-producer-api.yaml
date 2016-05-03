@@ -148,7 +148,8 @@ definitions:
           and the producer. This identifier should uniquely identify the event
           inside the producer.
       delivery_status:
-        $ref: '#/definitions/DeliveryStatus'
+        type: string
+#        $ref: '#/definitions/DeliveryStatus'
       event_payload:
         $ref: '#/definitions/EventPayload'
         additionalProperties: {}
@@ -211,7 +212,8 @@ definitions:
           An identifier for this event. This will be taken from the same-named
           field in TarbelaEvent.
       delivery_status:
-        $ref: '#/definitions/DeliveryStatus'
+        type: string
+#        $ref: '#/definitions/DeliveryStatus'
       
   Problem:
     type: object
