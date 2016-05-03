@@ -126,6 +126,15 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Event"
+
+  EventPayload:
+    description:
+      The actual event to be sent to Nakadi or other event sinks, in the
+      format recognized by this sink. Tarbela will not modify this object,
+      but simply send it as-is.
+    type: Object
+    additionalProperties: {}
+
   Event:
     description:
       An event which will be delivered to Nakadi (or other event sinks),
@@ -141,11 +150,7 @@ definitions:
       delivery_status:
         $ref: '#/definitions/DeliveryStatus'
       event_payload:
-        type: object
-        description:
-          The actual event to be sent to Nakadi or other event sinks, in the
-          format recognized by this sink. Tarbela will not modify this object,
-          but simply send it as-is.
+        $ref: '#/definitions/EventPayload'
         additionalProperties: {}
 #      channel_v1:
 #        description: |
