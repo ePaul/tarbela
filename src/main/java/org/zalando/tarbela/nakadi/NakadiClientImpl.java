@@ -7,7 +7,6 @@ import static org.springframework.http.HttpStatus.Series.REDIRECTION;
 import static org.springframework.http.HttpStatus.Series.SUCCESSFUL;
 import static org.springframework.http.MediaType.ALL;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-
 import static org.zalando.riptide.Conditions.anyContentType;
 import static org.zalando.riptide.Conditions.anyStatus;
 import static org.zalando.riptide.Conditions.on;
@@ -15,9 +14,7 @@ import static org.zalando.riptide.Selectors.series;
 import static org.zalando.riptide.Selectors.status;
 
 import java.io.IOException;
-
 import java.net.URI;
-
 import java.util.List;
 import java.util.Map;
 
@@ -27,14 +24,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatus.Series;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpResponse;
-
 import org.springframework.web.client.RestTemplate;
-
 import org.zalando.riptide.PassThroughResponseErrorHandler;
 import org.zalando.riptide.Rest;
 import org.zalando.riptide.Selectors;
 import org.zalando.riptide.ThrowingConsumer;
-
 import org.zalando.tarbela.nakadi.models.BatchItemResponse;
 import org.zalando.tarbela.nakadi.models.Problem;
 
@@ -81,7 +75,7 @@ public class NakadiClientImpl implements NakadiClient {
     }
 
     @Override
-    public void submitEvents(final String eventType, final List<Map<String, Object>> events,
+    public void submitEvents(final String eventType, final List<? extends Map<String, Object>> events,
             final NakadiResponseCallback callback) {
 
         final HttpHeaders headers = new HttpHeaders();
@@ -94,7 +88,7 @@ public class NakadiClientImpl implements NakadiClient {
         submitToURI(events, callback, headers, url);
     }
 
-    private void submitToURI(final List<Map<String, Object>> events, final NakadiResponseCallback callback,
+    private void submitToURI(final List<? extends Map<String, Object>> events, final NakadiResponseCallback callback,
             final HttpHeaders headers, final URI url) {
         log.info("submitting {} events to {} ...", events.size(), url);
         rest.execute(HttpMethod.POST, url, headers, events)         //

@@ -16,5 +16,5 @@ public interface NakadiClient {
      *                    and passed through as-is.
      * @param  callback   one of the methods of the callback will be called, depending on the response code.
      */
-    void submitEvents(String eventType, List<Map<String, Object>> events, NakadiResponseCallback callback);
+    void submitEvents(String eventType, List<? extends Map<String, Object>> events, NakadiResponseCallback callback);
 }
