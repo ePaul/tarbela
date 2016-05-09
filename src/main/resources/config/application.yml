@@ -13,14 +13,12 @@ logbook:
     category: http.traffic
     level: INFO
 
-# TODO: find out how we can disable the service tomcat completely, without also disabling
-# the management one. Setting the server port to -1 still starts up a tomcat (judging by
-# the logs), just non-reachable.
+# We don't expose any actual HTTP services, but want the management functions (/health, /info, ...).
 #
-#spring.main.web_environment: false
+# When defining a separate management.port,  we get two started tomcats, one of them not having anything.
+# Thus we just use server.port with the management port number.
 
-server.port: -1
-management.port: 7979
+server.port: 7979
 
 logging.pattern.console: "%date {%level} [%thread] [%X{X-FLOW-ID}] [%logger] %message%n"
 logging.pattern.file: "%date {%level} [%thread] [%X{X-FLOW-ID}] [%logger] %message%n"
