@@ -1,11 +1,17 @@
 package org.zalando.tarbela.producer;
 
+import static org.hamcrest.Matchers.is;
+
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +27,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestOperations;
 
 import org.zalando.tarbela.producer.models.BunchOfEvents;
+import org.zalando.tarbela.producer.models.Event;
+
+import com.google.common.collect.ImmutableList;
 
 public class EventRetrieverTest {
 
@@ -44,8 +53,13 @@ public class EventRetrieverTest {
 
     @Test
     public void testRetrieveEvents() {
+        final List<Event> events = ImmutableList.of(new Event());
+        when(bunch.getEvents()).thenReturn(events);
+
         final EventsWithNextPage result = retriever.retrieveEvents();
+
         assertNotNull(result);
+        assertThat(result.getEvents(), is(events));
     }
 
 }
