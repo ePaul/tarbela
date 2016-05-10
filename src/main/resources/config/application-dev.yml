@@ -1,0 +1,19 @@
+# Setup for local development at Team Lumberjack in Zalando Tech.
+# This will only work if you have the right credentials set up,
+# so don't try to exploit the information (it will not work).
+#
+# This file needs to be removed before we are going public,
+# as it is confusing. 
+
+tokens:
+    accessTokenUri: https://token.services.auth.zalando.com/oauth2/access_token?realm=/services
+    tokenInfoUri: https://info.services.auth.zalando.com/oauth2/tokeninfo
+  ### TODO!!!! change this
+    credentialsDirectory: ${user.home}/.purchasing_backend/meta/credentials
+    token-configuration-list:
+        - tokenId: producer
+          scopes:
+              - uid
+              - warehouse-allocation.read
+#        - tokenId: nakadi
+#          scopes: nakadi.event_stream.write

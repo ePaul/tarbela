@@ -1,0 +1,24 @@
+
+
+logbook:
+  filter.enabled: true
+  format.style: json
+  obfuscate:
+    headers:
+      - Authorization
+      - X-Secret
+    parameters:
+      - access_token
+  write:
+    category: http.traffic
+    level: INFO
+
+# We don't expose any actual HTTP services, but want the management functions (/health, /info, ...).
+#
+# When defining a separate management.port,  we get two started tomcats, one of them not having anything.
+# Thus we just use server.port with the management port number.
+
+server.port: 7979
+
+logging.pattern.console: "%date {%level} [%thread] [%X{X-FLOW-ID}] [%logger] %message%n"
+logging.pattern.file: "%date {%level} [%thread] [%X{X-FLOW-ID}] [%logger] %message%n"
