@@ -12,7 +12,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.client.RestOperations;
+
 import org.zalando.tarbela.producer.models.BunchOfEvents;
 import org.zalando.tarbela.producer.models.BunchofEventsLinks;
 import org.zalando.tarbela.producer.models.BunchofEventsLinksNext;
@@ -68,19 +70,18 @@ public class EventRetrieverImpl implements EventRetriever {
     }
 
     private Optional<EventRetriever> nextRetriever(final BunchOfEvents bunch) {
-        Optional<EventRetriever> nextRetriever = Optional.empty();
         final BunchofEventsLinks links = bunch.getLinks();
         if (links != null) {
             final BunchofEventsLinksNext nextLink = links.getNext();
             if (nextLink != null) {
                 final String nextLinkHref = nextLink.getHref();
                 if (nextLinkHref != null) {
-                    nextRetriever = Optional.of(new EventRetrieverImpl(nextLinkHref, restTemplate));
+                    return Optional.of(new EventRetrieverImpl(nextLinkHref, restTemplate));
                 }
             }
         }
 
-        return nextRetriever;
+        return Optional.empty();
     }
 
 }
