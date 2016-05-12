@@ -14,6 +14,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -39,7 +41,7 @@ import com.google.common.collect.ImmutableList;
 
 public class EventRetrieverTest {
 
-    private static final String PRODUCER_EVENTS_URL = "https://example.org/events";
+    private static final URI PRODUCER_EVENTS_URL = URI.create("https://example.org/events");
 
     @Mock
     private RestOperations template;
@@ -52,7 +54,7 @@ public class EventRetrieverTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
         doReturn(new ResponseEntity<>(bunch, HttpStatus.OK)) //
-        .when(template).exchange(any(String.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(BunchOfEvents.class));
+        .when(template).exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(BunchOfEvents.class));
 
         retriever = new EventRetrieverImpl(PRODUCER_EVENTS_URL, template);
     }
@@ -75,7 +77,7 @@ public class EventRetrieverTest {
 
         // first page with next link
         // setup
-        final String nextUrl = "nextUrl";
+        final String nextUrl = "https://example.com/nextUrl";
         when(bunch.getLinks()).thenReturn(makeNextLink(nextUrl));
 
         // do stuff
@@ -92,7 +94,8 @@ public class EventRetrieverTest {
         // asserts
         assertTrue(secondResultOpt.isPresent());
         assertThat(secondResultOpt.get().getEvents(), is(events));
-        verify(template).exchange(eq(nextUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(BunchOfEvents.class));
+        verify(template).exchange(eq(URI.create(nextUrl)), eq(HttpMethod.GET), any(HttpEntity.class),
+            eq(BunchOfEvents.class));
     }
 
     private BunchofEventsLinks makeNextLink(final String nextUrl) {
@@ -112,8 +115,7 @@ public class EventRetrieverTest {
         final Optional<EventsWithNextPage> secondResultOpt = firstResult.nextPage();
 
         assertFalse(secondResultOpt.isPresent());
-        verify(template).exchange(any(String.class), eq(HttpMethod.GET), any(HttpEntity.class),
-            eq(BunchOfEvents.class));
+        verify(template).exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(BunchOfEvents.class));
     }
 
     @Test
@@ -125,8 +127,7 @@ public class EventRetrieverTest {
         final Optional<EventsWithNextPage> secondResultOpt = firstResult.nextPage();
 
         assertFalse(secondResultOpt.isPresent());
-        verify(template).exchange(any(String.class), eq(HttpMethod.GET), any(HttpEntity.class),
-            eq(BunchOfEvents.class));
+        verify(template).exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(BunchOfEvents.class));
     }
 
     @Test
@@ -138,8 +139,7 @@ public class EventRetrieverTest {
         final Optional<EventsWithNextPage> secondResultOpt = firstResult.nextPage();
 
         assertFalse(secondResultOpt.isPresent());
-        verify(template).exchange(any(String.class), eq(HttpMethod.GET), any(HttpEntity.class),
-            eq(BunchOfEvents.class));
+        verify(template).exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(BunchOfEvents.class));
     }
 
 }

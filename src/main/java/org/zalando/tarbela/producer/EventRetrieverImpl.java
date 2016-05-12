@@ -3,6 +3,8 @@ package org.zalando.tarbela.producer;
 import static org.zalando.tarbela.util.StringConstants.CONTENT_TYPE_BUNCH_OF_EVENTS;
 import static org.zalando.tarbela.util.StringConstants.CONTENT_TYPE_PROBLEM_JSON;
 
+import java.net.URI;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -20,12 +22,16 @@ import org.zalando.tarbela.producer.models.BunchofEventsLinks;
 import org.zalando.tarbela.producer.models.BunchofEventsLinksNext;
 import org.zalando.tarbela.producer.models.Event;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class EventRetrieverImpl implements EventRetriever {
 
-    private final String retrievalUrl;
+    private final URI retrievalUrl;
     private final RestOperations restTemplate;
 
-    public EventRetrieverImpl(final String retrievalUrl, final RestOperations restTemplate) {
+    public EventRetrieverImpl(final URI retrievalUrl, final RestOperations restTemplate) {
+        log.info("EventRetriever is using {}", retrievalUrl);
         this.retrievalUrl = retrievalUrl;
         this.restTemplate = restTemplate;
     }
@@ -76,7 +82,7 @@ public class EventRetrieverImpl implements EventRetriever {
             if (nextLink != null) {
                 final String nextLinkHref = nextLink.getHref();
                 if (nextLinkHref != null) {
-                    return Optional.of(new EventRetrieverImpl(nextLinkHref, restTemplate));
+                    return Optional.of(new EventRetrieverImpl(retrievalUrl.resolve(nextLinkHref), restTemplate));
                 }
             }
         }

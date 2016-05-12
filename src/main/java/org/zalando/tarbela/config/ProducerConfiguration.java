@@ -1,5 +1,7 @@
 package org.zalando.tarbela.config;
 
+import java.net.URI;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -23,7 +25,7 @@ public class ProducerConfiguration {
     private static final String PRODUCER_TOKEN_NAME = "producer";
 
     @Value("producer.event.uri")
-    private String producerEventsURI;
+    private URI producerEventsURI;
 
     @Autowired
     private HttpComponentsClientHttpRequestFactory requestFactory;
