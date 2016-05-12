@@ -14,7 +14,7 @@ public class EventStatusUpdaterImpl implements EventStatusUpdater {
     private final RestOperations template;
     private final URI eventsUri;
 
-    public EventStatusUpdaterImpl(final RestOperations template, final URI eventsUri) {
+    public EventStatusUpdaterImpl(final URI eventsUri, final RestOperations template) {
         this.template = template;
         this.eventsUri = eventsUri;
     }

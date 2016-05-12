@@ -42,7 +42,7 @@ public class ProducerConfiguration {
 
     @Bean
     public EventStatusUpdater eventUpdater() {
-        return new EventStatusUpdaterImpl(createTemplate(PRODUCER_TOKEN_NAME), producerEventsURI);
+        return new EventStatusUpdaterImpl(producerEventsURI, createTemplate(PRODUCER_TOKEN_NAME));
     }
 
     private RestOperations createTemplate(final String tokenName) {
