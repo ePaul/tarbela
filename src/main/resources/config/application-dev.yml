@@ -17,3 +17,5 @@ tokens:
               - warehouse-allocation.read
 #        - tokenId: nakadi
 #          scopes: nakadi.event_stream.write
+
+PRODUCER_EVENTS_URI: http://localhost:8085/events
