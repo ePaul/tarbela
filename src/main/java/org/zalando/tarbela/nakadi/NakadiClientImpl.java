@@ -50,11 +50,6 @@ public class NakadiClientImpl implements NakadiClient {
         new TypeToken<List<BatchItemResponse>>() { };
 
     private static final MediaType PROBLEM_MEDIA_TYPE = MediaType.parseMediaType("application/problem+json");
-    // private static final MediaType PROBLEM_MEDIA_TYPE =
-    // MediaType.parseMediaType("application/x.problem+json");
-
-    // TODO
-    private static final String UNKNOWN_PROBLEM_RESPONSE = "TODO:invent-some-url-for-this-or-find-an-existing-one";
 
     private final String submissionUriTemplate;
     private final Rest rest;
@@ -71,7 +66,6 @@ public class NakadiClientImpl implements NakadiClient {
         p.setStatus(response.getRawStatusCode());
         p.setTitle(response.getStatusText());
         p.setDetail("Could not parse Problem from HTTP response");
-        p.setType(UNKNOWN_PROBLEM_RESPONSE);
         return p;
     }
 
