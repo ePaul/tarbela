@@ -18,11 +18,20 @@ import org.zalando.tarbela.nakadi.NakadiResponseCallback;
 import org.zalando.tarbela.nakadi.models.BatchItemResponse;
 import org.zalando.tarbela.nakadi.models.Problem;
 import org.zalando.tarbela.producer.EventRetriever;
+import org.zalando.tarbela.producer.EventStatusUpdater;
 import org.zalando.tarbela.producer.EventsWithNextPage;
 import org.zalando.tarbela.producer.models.Event;
 import org.zalando.tarbela.producer.models.EventChannel;
+import org.zalando.tarbela.producer.models.EventUpdate;
+import org.zalando.tarbela.util.ZipUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class EventServiceImpl implements EventService {
+
+    private static final String DELIVERY_STATUS_SENT = "SENT";
+    private static final String DELIVERY_STATUS_ERROR = "ERROR";
 
     // TODO: have multiple retrievers later
     @Autowired
@@ -31,6 +40,9 @@ public class EventServiceImpl implements EventService {
     // TODO: have multiple Nakadis (or other sinks) later.
     @Autowired
     private NakadiClient nakadiClient;
+
+    @Autowired
+    private EventStatusUpdater updater;
 
     @Override
     public void publishEvents() {
@@ -67,8 +79,16 @@ public class EventServiceImpl implements EventService {
 
                 @Override
                 public void successfullyPublished() {
-                    // TODO write success back to producer
 
+                    final List<EventUpdate> updates = eventList.stream().map(event -> {
+                                                                   final EventUpdate update = new EventUpdate();
+                                                                   update.setEventId(event.getEventId());
+                                                                   update.setDeliveryStatus(DELIVERY_STATUS_SENT);
+                                                                   return update;
+                                                               }).collect(toList());
+
+                    // write success back to producer
+                    updater.updateStatuses(updates);
                 }
 
                 @Override
@@ -79,15 +99,42 @@ public class EventServiceImpl implements EventService {
 
                 @Override
                 public void partiallySubmitted(final List<BatchItemResponse> responseList) {
-                    // TODO write both successes and failures back to producer
+                    final List<? extends EventUpdate> updates = ZipUtils.mapPairs(eventList, responseList,
+                            (event, response) -> {
+                                final EventUpdate update = new EventUpdate();
+                                update.setEventId(event.getEventId());
+                                switch (response.getPublishingStatus()) {
 
+                                    case ABORTED :
+
+                                        // don't change the status.
+                                        break;
+
+                                    case FAILED :
+                                        update.setDeliveryStatus(DELIVERY_STATUS_ERROR);
+                                        break;
+
+                                    case SUBMITTED :
+                                        update.setDeliveryStatus(DELIVERY_STATUS_ERROR);
+                                        break;
+
+                                    default :
+                                        break;
+
+                                }
+
+                                return update;
+                            });
+                    updates.removeIf(update -> update.getDeliveryStatus() == null);
+                    if (!updates.isEmpty()) {
+                        updater.updateStatuses(updates);
+                    }
                 }
 
                 @Override
                 public void otherSuccessStatus(final HttpStatus status) {
                     // TODO log warning (or error so it gets seen?), but write
                     // success back to producer.
-
                 }
 
                 @Override
