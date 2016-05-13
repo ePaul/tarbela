@@ -4,6 +4,11 @@ import java.net.URI;
 
 import java.util.List;
 
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+
 import org.springframework.web.client.RestOperations;
 
 import org.zalando.tarbela.producer.models.BunchOfEventUpdates;
@@ -11,6 +16,8 @@ import org.zalando.tarbela.producer.models.EventUpdate;
 
 public class EventStatusUpdaterImpl implements EventStatusUpdater {
 
+    private static final MediaType UPDATE_MEDIA_TYPE = MediaType.parseMediaType(
+            "application/x.tarbela-event-list-update+json");
     private final RestOperations template;
     private final URI eventsUri;
 
@@ -24,9 +31,14 @@ public class EventStatusUpdaterImpl implements EventStatusUpdater {
         final BunchOfEventUpdates bunch = new BunchOfEventUpdates();
         bunch.setEvents(updates);
 
-        template.postForEntity(eventsUri, bunch, Void.class);
+        final HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(UPDATE_MEDIA_TYPE);
 
-        // TODO: exception handling here or where this is called?
+        final HttpEntity<BunchOfEventUpdates> requestEntity = new HttpEntity<>(bunch, headers);
+
+        template.exchange(eventsUri, HttpMethod.PATCH, requestEntity, Void.class);
+
+        // TODO: exception handling here or wherever this is called?
     }
 
 }
