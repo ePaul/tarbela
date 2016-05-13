@@ -3,7 +3,7 @@
 # so don't try to exploit the information (it will not work).
 #
 # This file needs to be removed before we are going public,
-# as it is confusing. 
+# as it is confusing.
 
 tokens:
     accessTokenUri: https://token.services.auth.zalando.com/oauth2/access_token?realm=/services
@@ -18,4 +18,4 @@ tokens:
 #        - tokenId: nakadi
 #          scopes: nakadi.event_stream.write
 
-PRODUCER_EVENTS_URI: http://localhost:8085/events
+producer.events.uri: http://localhost:8085/events
