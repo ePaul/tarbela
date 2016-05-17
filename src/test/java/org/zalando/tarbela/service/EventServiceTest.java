@@ -1,13 +1,17 @@
 package org.zalando.tarbela.service;
 
+import static org.hamcrest.Matchers.contains;
+
 import static org.junit.Assert.assertThat;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -76,28 +80,61 @@ public class EventServiceTest {
     }
 
     @Test
-    public void testHappyCase() {
+    public void testHappyCaseTwoEventsSameType() {
+
+        // setup
         final ImmutableMap<String, Object> payLoad1 = ImmutableMap.of("hello", "World");
         final ImmutableMap<String, Object> payLoad2 = ImmutableMap.of("hello", "other world");
+
         when(firstPage.getEvents()).thenReturn(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", payLoad1),
                 makeEvent(EVENT_TYPE_1, "2", payLoad2)));
         when(firstPage.nextPage()).thenReturn(Optional.empty());
-
         doAnswer(invocation -> {
                                     callbackCaptor.getValue().successfullyPublished();
                                     return null;
                                 }).when(nakadiClient).submitEvents(anyString(), nakadiEventsCaptor.capture(),
                                     callbackCaptor.capture());
-
         doNothing().when(updater).updateStatuses(updatesCaptor.capture());
 
+        // test
         service.publishEvents();
 
+        // asserts
         verify(nakadiClient).submitEvents(eq(EVENT_TYPE_1), eq(ImmutableList.of(payLoad1, payLoad2)),
             any(NakadiResponseCallback.class));
-
         assertThat(updatesCaptor.getValue(),
             containsInAnyOrder(updateWithIdAndStatus("1", "SENT"), updateWithIdAndStatus("2", "SENT")));
+    }
+
+    @Test
+    public void testHappyCaseTwoEventsDifferentType() {
+
+        // setup
+        final ImmutableMap<String, Object> payLoad1 = ImmutableMap.of("hello", "World");
+        final ImmutableMap<String, Object> payLoad2 = ImmutableMap.of("hello", "other world");
+
+        when(firstPage.getEvents()).thenReturn(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", payLoad1),
+                makeEvent(EVENT_TYPE_2, "2", payLoad2)));
+        when(firstPage.nextPage()).thenReturn(Optional.empty());
+        doAnswer(invocation -> {
+                                    callbackCaptor.getValue().successfullyPublished();
+                                    return null;
+                                }).when(nakadiClient).submitEvents(anyString(), nakadiEventsCaptor.capture(),
+                                    callbackCaptor.capture());
+        doNothing().when(updater).updateStatuses(updatesCaptor.capture());
+
+        // test
+        service.publishEvents();
+
+        // asserts
+        verify(nakadiClient).submitEvents(eq(EVENT_TYPE_1), eq(ImmutableList.of(payLoad1)),
+            any(NakadiResponseCallback.class));
+        verify(nakadiClient).submitEvents(eq(EVENT_TYPE_2), eq(ImmutableList.of(payLoad2)),
+            any(NakadiResponseCallback.class));
+        verify(updater, times(2)).updateStatuses(anyListOf(EventUpdate.class));
+        assertThat(updatesCaptor.getAllValues(),
+            containsInAnyOrder(contains(updateWithIdAndStatus("1", "SENT")),
+                contains(updateWithIdAndStatus("2", "SENT"))));
     }
 
     private Event makeEvent(final String eventType, final String eId, final Map<String, Object> payload) {
