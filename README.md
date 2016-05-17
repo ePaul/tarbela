@@ -47,7 +47,7 @@ Show images:
 
 Run with docker:
 
-    $ docker run -it registry/tarbela:0.1 \
+    $ docker run -it registry/tarbela:0.1
     
 Push docker image:
 
