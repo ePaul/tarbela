@@ -14,7 +14,41 @@ The goal of the project is to provide a scalable, reliable and generic message p
 
 + Tarbela itself is stateless, just uses a configuration defining from which URIs to fetch the events
 
-
-
  
 We are currently in a pre-alpha phase, there is nothing usable yet here.
+
+
+##How to build
+
+    $ mvn clean install
+
+##How to run
+
+    $ # set env variables first
+    $ mvn spring-boot:run 
+
+##How to build a docker image
+
+Build tarbela:
+
+    $ mvn clean package -U
+
+Build scm-source.json:
+
+    $ ./scm-source.sh
+
+Build docker image:
+
+    $ docker build -t registry/tarbela:0.1 .
+
+Show images:
+
+    $ docker images
+
+Run with docker:
+
+    $ docker run -it registry/tarbela:0.1 \
+    
+Push docker image:
+
+    $ docker push registry/tarbela:0.1

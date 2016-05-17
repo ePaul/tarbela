@@ -7,4 +7,4 @@ COPY scm-source.json /scm-source.json
 
 EXPOSE 7979
 
-CMD java $(java-dynamic-memory-optsyok  40) $(appdynamics-agent) -jar /tarbela.jar
+CMD java $(java-dynamic-memory-opts  40) $(appdynamics-agent) -jar /tarbela.jar
