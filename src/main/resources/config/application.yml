@@ -1,3 +1,14 @@
+tokens:
+    accessTokenUri: ${ACCESS_TOKEN_URI}
+    tokenInfoUri:  ${TOKEN_INFO_URI}
+    credentialsDirectory: ${CREDENTIALS_DIR}
+    token-configuration-list:
+        - tokenId: producer
+          scopes:
+              - uid
+              - warehouse-allocation.read
+
+producer.events.uri: ${PRODUCER_EVENTS_URI}
 
 
 logbook:

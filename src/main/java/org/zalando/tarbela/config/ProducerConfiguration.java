@@ -22,7 +22,7 @@ public class ProducerConfiguration {
 
     private static final String PRODUCER_TOKEN_NAME = "producer";
 
-    @Value("${PRODUCER_EVENTS_URI}")
+    @Value("producer.event.uri")
     private String producerEventsURI;
 
     @Autowired
