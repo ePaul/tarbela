@@ -5,8 +5,6 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +19,6 @@ import org.zalando.tarbela.producer.EventRetriever;
 import org.zalando.tarbela.producer.EventStatusUpdater;
 import org.zalando.tarbela.producer.EventsWithNextPage;
 import org.zalando.tarbela.producer.models.Event;
-import org.zalando.tarbela.producer.models.EventChannel;
 import org.zalando.tarbela.producer.models.EventUpdate;
 import org.zalando.tarbela.util.ZipUtils;
 
@@ -46,6 +43,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void publishEvents() {
+
         Optional<EventsWithNextPage> events = Optional.of(retriever.retrieveEvents());
         while (events.isPresent()) {
             final EventsWithNextPage page = events.get();
@@ -56,14 +54,13 @@ public class EventServiceImpl implements EventService {
 
     private void publishPage(final List<Event> events) {
 
-        // TODO: for this to actually work (i.e. to create not just groups of
-        // size one), EventChannel needs equals/hashCode implementations.
-        final Map<EventChannel, List<Event>> grouped = events.stream().collect(groupingBy(Event::getChannel));
-        for (final Entry<EventChannel, List<Event>> group : grouped.entrySet()) {
-
-            final List<Event> eventList = group.getValue();
-            final String topicName = group.getKey().getTopicName();
-            submitGroupAndHandleResponse(eventList, topicName);
+        // instead of grouping by channel (which produces groups of size one, because EventChannel doesn't implement
+        // equals/hashCode), we group by channel's toString (which actually works for the generated classes).
+        final Iterable<List<Event>> grouped = events.stream().collect(groupingBy(event ->
+                        event.getChannel().toString())).values();
+        for (final List<Event> group : grouped) {
+            final String topicName = group.get(0).getChannel().getTopicName();
+            submitGroupAndHandleResponse(group, topicName);
         }
     }
 
