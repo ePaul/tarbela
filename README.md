@@ -45,9 +45,13 @@ Show images:
 
     $ docker images
 
-Run with docker:
+Run with docker with example env variable configuration:
 
-    $ docker run -it registry/tarbela:0.1
+    $ docker run -it -e ACCESS_TOKEN_URI='https://token.services.auth.zalando.com/oauth2/access_token?realm=/services' \
+                     -e TOKEN_INFO_URI='https://info.services.auth.zalando.com/oauth2/tokeninfo' \
+                     -e CREDENTIALS_DIR='meta/credentials' \
+                     -e PRODUCER_EVENTS_URI='https://warehouse-allocation-staging.wholesale.zalan.do/events' \
+                     registry/tarbela:0.1
     
 Push docker image:
 
