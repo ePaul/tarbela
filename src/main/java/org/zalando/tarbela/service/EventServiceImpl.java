@@ -70,12 +70,15 @@ public class EventServiceImpl implements EventService {
 
                 @Override
                 public void validationProblem(final List<BatchItemResponse> responseList) {
-                    // TODO write failures back to producer?
+                    log.info("no events were submitted, due to validation problems");
 
+                    // write failures back to producer
+                    createAndSendUpdatesFromBatchItemResponses(eventList, topicName, responseList);
                 }
 
                 @Override
                 public void successfullyPublished() {
+                    log.info("{} events were successfully published to {}", eventList.size(), topicName);
 
                     final List<EventUpdate> updates = eventList.stream().map(event -> {
                                                                    final EventUpdate update = new EventUpdate();
@@ -90,12 +93,18 @@ public class EventServiceImpl implements EventService {
 
                 @Override
                 public void serverError(final Problem problem) {
+                    log.error("Some server error occurred: {}", problem);
                     // TODO wait a bit, try again?
-
                 }
 
                 @Override
                 public void partiallySubmitted(final List<BatchItemResponse> responseList) {
+                    log.info("some events were submitted, but not all of them.");
+                    createAndSendUpdatesFromBatchItemResponses(eventList, topicName, responseList);
+                }
+
+                private void createAndSendUpdatesFromBatchItemResponses(final List<Event> eventList,
+                        final String topicName, final List<BatchItemResponse> responseList) {
                     final List<? extends EventUpdate> updates = ZipUtils.mapPairs(eventList, responseList,
                             (event, response) -> {
                                 final EventUpdate update = new EventUpdate();
@@ -118,7 +127,7 @@ public class EventServiceImpl implements EventService {
                                         break;
 
                                     default :
-                                        throw new IllegalStateException(
+                                        throw new IllegalArgumentException(
                                             "unexpected publishing status: " + response.getPublishingStatus());
                                 }
 
@@ -133,14 +142,14 @@ public class EventServiceImpl implements EventService {
                 @Override
                 public void otherSuccessStatus(final HttpStatus status) {
 
-                    // TODO log warning (or error so it gets seen?), but write
-                    // success back to producer.
+                    // log warning (or error so it gets seen?), but write success back to producer.
                     log.error("Unexpected HTTP status {}", status);
                     successfullyPublished();
                 }
 
                 @Override
                 public void clientError(final Problem problem) {
+                    log.error("Some client error occurred (not a validation problem): {}", problem);
                     // TODO analyze problem, react accordingly.
                 }
             });
