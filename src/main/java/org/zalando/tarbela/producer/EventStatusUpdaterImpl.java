@@ -16,8 +16,6 @@ import org.springframework.web.client.RestOperations;
 import org.zalando.tarbela.producer.models.BunchOfEventUpdates;
 import org.zalando.tarbela.producer.models.EventUpdate;
 
-import com.google.common.collect.ImmutableList;
-
 public class EventStatusUpdaterImpl implements EventStatusUpdater {
 
     private static final MediaType UPDATE_MEDIA_TYPE = MediaType.parseMediaType(CONTENT_TYPE_BUNCH_OF_EVENT_UPDATES);
@@ -30,9 +28,9 @@ public class EventStatusUpdaterImpl implements EventStatusUpdater {
     }
 
     @Override
-    public void updateStatuses(final List<? extends EventUpdate> updates) {
+    public void updateStatuses(final List<EventUpdate> updates) {
         final BunchOfEventUpdates bunch = new BunchOfEventUpdates();
-        bunch.setEvents(ImmutableList.copyOf(updates));
+        bunch.setEvents(updates);
 
         final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(UPDATE_MEDIA_TYPE);

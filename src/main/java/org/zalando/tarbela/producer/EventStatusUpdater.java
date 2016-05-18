@@ -12,5 +12,5 @@ public interface EventStatusUpdater {
     /**
      * Updates event statuses (in bulk form) to some producer.
      */
-    void updateStatuses(List<? extends EventUpdate> updates);
+    void updateStatuses(List<EventUpdate> updates);
 }

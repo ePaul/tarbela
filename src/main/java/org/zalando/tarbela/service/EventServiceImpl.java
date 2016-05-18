@@ -105,7 +105,7 @@ public class EventServiceImpl implements EventService {
 
                 private void createAndSendUpdatesFromBatchItemResponses(final List<Event> eventList,
                         final String topicName, final List<BatchItemResponse> responseList) {
-                    final List<? extends EventUpdate> updates = ZipUtils.mapPairs(eventList, responseList,
+                    final List<EventUpdate> updates = ZipUtils.mapPairs(eventList, responseList,
                             (event, response) -> {
                                 final EventUpdate update = new EventUpdate();
                                 update.setEventId(event.getEventId());

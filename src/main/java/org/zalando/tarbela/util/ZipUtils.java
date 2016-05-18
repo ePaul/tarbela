@@ -45,7 +45,7 @@ public class ZipUtils {
      *
      * @return  the list of the results of the mapping.
      */
-    public static <T, U, R> List<? extends R> mapPairs(final List<T> tList, final List<U> uList,
+    public static <T, U, R> List<R> mapPairs(final List<T> tList, final List<U> uList,
             final BiFunction<T, U, R> mapping) {
         Preconditions.checkArgument(tList.size() == uList.size(),
             "argument lists don't have the same size! (tList.size = %s <> %s = uList.size)", tList.size(),
