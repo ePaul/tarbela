@@ -1,7 +1,5 @@
 package org.zalando.tarbela.service;
 
-import static org.hamcrest.Matchers.contains;
-
 import static org.junit.Assert.assertThat;
 
 import static org.mockito.Matchers.any;
@@ -12,12 +10,14 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.ABORTED;
 import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.FAILED;
+import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.SUBMITTED;
 
 import java.util.HashMap;
 import java.util.List;
@@ -39,10 +39,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import org.springframework.http.HttpStatus;
+
 import org.zalando.tarbela.nakadi.NakadiClient;
 import org.zalando.tarbela.nakadi.NakadiResponseCallback;
 import org.zalando.tarbela.nakadi.models.BatchItemResponse;
 import org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum;
+import org.zalando.tarbela.nakadi.models.Problem;
 import org.zalando.tarbela.producer.EventRetriever;
 import org.zalando.tarbela.producer.EventStatusUpdater;
 import org.zalando.tarbela.producer.EventsWithNextPage;
@@ -116,6 +119,61 @@ public class EventServiceTest {
     }
 
     @Test
+    public void testHappyCaseUnexpectedSuccessResult() {
+
+        // setup
+        setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
+                makeEvent(EVENT_TYPE_1, "2", PAYLOAD_2)));
+        setupNakadiMock(callback -> callback.otherSuccessStatus(HttpStatus.ACCEPTED));
+        setupUpdaterMock();
+
+        // test
+        service.publishEvents();
+
+        // asserts
+        assertThat(updatesCaptor.getValue(),
+            containsInAnyOrder(updateWithIdAndStatus("1", "SENT"), updateWithIdAndStatus("2", "SENT")));
+    }
+
+    @Test
+    public void testHappyCaseTwoPagesAreSubmittedSeparately() {
+
+        // setup
+        setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
+                makeEvent(EVENT_TYPE_1, "2", PAYLOAD_2)),
+            ImmutableList.of(makeEvent(EVENT_TYPE_1, "3", PAYLOAD_1), makeEvent(EVENT_TYPE_1, "4", PAYLOAD_2)));
+        setupNakadiMock(callback -> { });
+
+        // test
+        service.publishEvents();
+
+        // asserts
+        verify(nakadiClient, times(2)).submitEvents(eq(EVENT_TYPE_1), eq(ImmutableList.of(PAYLOAD_1, PAYLOAD_2)),
+            any(NakadiResponseCallback.class));
+    }
+
+    @Test
+    public void testHappyCaseTwoPagesAreUpdatedSeparately() {
+
+        // setup
+        setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
+                makeEvent(EVENT_TYPE_1, "2", PAYLOAD_2)),
+            ImmutableList.of(makeEvent(EVENT_TYPE_1, "3", PAYLOAD_1), makeEvent(EVENT_TYPE_1, "4", PAYLOAD_2)));
+        setupNakadiMock(callback -> callback.successfullyPublished());
+        setupUpdaterMock();
+
+        // test
+        service.publishEvents();
+
+        // asserts
+        verify(updater, times(2)).updateStatuses(anyListOf(EventUpdate.class));
+        assertThat(updatesCaptor.getAllValues(),
+            containsInAnyOrder(
+                containsInAnyOrder(updateWithIdAndStatus("1", "SENT"), updateWithIdAndStatus("2", "SENT")),
+                containsInAnyOrder(updateWithIdAndStatus("3", "SENT"), updateWithIdAndStatus("4", "SENT"))));
+    }
+
+    @Test
     public void testHappyCaseTwoEventsDifferentTypeAreSubmittedSeparately() {
 
         // setup
@@ -137,7 +195,6 @@ public class EventServiceTest {
     public void testHappyCaseTwoEventsDifferentTypeAreUpdatedSeparately() {
 
         // setup
-
         setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
                 makeEvent(EVENT_TYPE_2, "2", PAYLOAD_2)));
         setupNakadiMock(callback -> callback.successfullyPublished());
@@ -155,8 +212,8 @@ public class EventServiceTest {
 
     @Test
     public void testValidationProblem() {
-        // setup
 
+        // setup
         setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
                 makeEvent(EVENT_TYPE_1, "2", PAYLOAD_2)));
 
@@ -172,7 +229,88 @@ public class EventServiceTest {
         assertThat(updatesCaptor.getAllValues(), contains(contains(updateWithIdAndStatus("2", "ERROR"))));
     }
 
+    @Test
+    public void testValidationProblemAllAborted() {
+
+        // setup
+        setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
+                makeEvent(EVENT_TYPE_1, "2", PAYLOAD_2)));
+
+        final List<BatchItemResponse> responses = ImmutableList.of(makeResponse(ABORTED), makeResponse(ABORTED));
+        setupNakadiMock(callback -> callback.validationProblem(responses));
+        setupUpdaterMock();
+
+        // test
+        service.publishEvents();
+
+        // assert
+        verify(updater, never()).updateStatuses(anyListOf(EventUpdate.class));
+    }
+
+    @Test
+    public void testPartiallySubmitted() {
+
+        // setup
+        setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
+                makeEvent(EVENT_TYPE_1, "2", PAYLOAD_2)));
+
+        final List<BatchItemResponse> responses = ImmutableList.of(makeResponse(SUBMITTED),
+                makeResponse(FAILED, "spaces are not allowed!"));
+        setupNakadiMock(callback -> callback.partiallySubmitted(responses));
+        setupUpdaterMock();
+
+        // test
+        service.publishEvents();
+
+        // assert
+        assertThat(updatesCaptor.getAllValues(),
+            contains(containsInAnyOrder(updateWithIdAndStatus("1", "SENT"), updateWithIdAndStatus("2", "ERROR"))));
+    }
+
+    @Test
+    public void testServerError() {
+
+        // setup
+        setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
+                makeEvent(EVENT_TYPE_1, "2", PAYLOAD_2)));
+
+        final Problem problem = makeProblem();
+        setupNakadiMock(callback -> callback.serverError(problem));
+        setupUpdaterMock();
+
+        // test
+        service.publishEvents();
+
+        // assert
+        verify(updater, never()).updateStatuses(anyListOf(EventUpdate.class));
+    }
+
+    @Test
+    public void testClientError() {
+
+        // setup
+        setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
+                makeEvent(EVENT_TYPE_1, "2", PAYLOAD_2)));
+
+        final Problem problem = makeProblem();
+        setupNakadiMock(callback -> callback.clientError(problem));
+        setupUpdaterMock();
+
+        // test
+        service.publishEvents();
+
+        // assert
+        verify(updater, never()).updateStatuses(anyListOf(EventUpdate.class));
+    }
+
     // ---------- Mock setup --------
+
+    private Problem makeProblem() {
+        final Problem result = new Problem();
+
+        // TODO: fill relevant fields?
+        return result;
+    }
 
     /**
      * Sets up the mock for the updater to accept anything and capture it in the updatesCaptor.
@@ -250,6 +388,11 @@ public class EventServiceTest {
     @SafeVarargs
     private static <X> Matcher<Iterable<? extends X>> containsInAnyOrder(final Matcher<X>... matchers) {
         return Matchers.containsInAnyOrder(matchers);
+    }
+
+    @SafeVarargs
+    private static <X> Matcher<Iterable<? extends X>> contains(final Matcher<X>... matchers) {
+        return Matchers.contains(matchers);
     }
 
     private Matcher<EventUpdate> updateWithIdAndStatus(final String id, final String status) {
