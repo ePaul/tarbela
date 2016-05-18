@@ -109,15 +109,17 @@ public class EventServiceImpl implements EventService {
 
                                     case FAILED :
                                         update.setDeliveryStatus(DELIVERY_STATUS_ERROR);
+                                        log.error("event {} (with payload {}) could not be published to {}: {}",
+                                            event.getEventId(), event.getEventPayload(), topicName, response);
                                         break;
 
                                     case SUBMITTED :
-                                        update.setDeliveryStatus(DELIVERY_STATUS_ERROR);
+                                        update.setDeliveryStatus(DELIVERY_STATUS_SENT);
                                         break;
 
                                     default :
-                                        break;
-
+                                        throw new IllegalStateException(
+                                            "unexpected publishing status: " + response.getPublishingStatus());
                                 }
 
                                 return update;
@@ -130,8 +132,11 @@ public class EventServiceImpl implements EventService {
 
                 @Override
                 public void otherSuccessStatus(final HttpStatus status) {
+
                     // TODO log warning (or error so it gets seen?), but write
                     // success back to producer.
+                    log.error("Unexpected HTTP status {}", status);
+                    successfullyPublished();
                 }
 
                 @Override
