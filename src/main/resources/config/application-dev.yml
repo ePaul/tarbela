@@ -19,3 +19,4 @@ tokens:
           scopes: nakadi.event_stream.write
 
 producer.events.uri: http://localhost:8085/events
+nakadi.submission.uriTemplate: https://nakadi-sandbox.aruha-test.zalan.do/event-type/{type}/submit

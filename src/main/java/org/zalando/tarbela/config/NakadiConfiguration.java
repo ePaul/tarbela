@@ -27,12 +27,12 @@ public class NakadiConfiguration {
     @Autowired
     private AccessTokens accessTokens;
 
-    @Value("${NAKADI_SUBMISSION_URI}")
-    private String nakadiURI;
+    @Value("${nakadi.submission.uriTemplate}")
+    private String nakadiURITemplate;
 
     @Bean
     public NakadiClient nakadiClient() {
-        return new NakadiClientImpl(nakadiURI, createTemplate(NAKADI_TOKEN_NAME));
+        return new NakadiClientImpl(nakadiURITemplate, createTemplate(NAKADI_TOKEN_NAME));
     }
 
     private RestTemplate createTemplate(final String tokenName) {

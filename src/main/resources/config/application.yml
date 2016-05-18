@@ -9,7 +9,7 @@ tokens:
               - warehouse-allocation.read
 
 producer.events.uri: ${PRODUCER_EVENTS_URI}
-
+nakadi.submission.uriTemplate: ${NAKADI_SUBMISSION_URI_TEMPLATE}
 
 logbook:
   filter.enabled: true
