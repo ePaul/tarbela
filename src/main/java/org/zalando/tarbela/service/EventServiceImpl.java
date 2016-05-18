@@ -133,7 +133,10 @@ public class EventServiceImpl implements EventService {
 
                                 return update;
                             });
+
+                    // this removes the updates relating to publishing status ABORTED.
                     updates.removeIf(update -> update.getDeliveryStatus() == null);
+
                     if (!updates.isEmpty()) {
                         updater.updateStatuses(updates);
                     }
