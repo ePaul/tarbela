@@ -47,8 +47,8 @@ public class ZipUtils {
      */
     public static <T, U, R> List<? extends R> mapPairs(final List<T> tList, final List<U> uList,
             final BiFunction<T, U, R> mapping) {
-        Preconditions.checkArgument(tList.size() != uList.size(),
-            "argument lists don't have the same size! (tList.size = {} <> uList.size = {})", tList.size(),
+        Preconditions.checkArgument(tList.size() == uList.size(),
+            "argument lists don't have the same size! (tList.size = %s <> %s = uList.size)", tList.size(),
             uList.size());
 
         final List<R> result = newArrayListWithCapacity(tList.size());

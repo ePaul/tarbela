@@ -11,14 +11,19 @@ import static org.mockito.Matchers.eq;
 
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.ABORTED;
+import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.FAILED;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -36,6 +41,8 @@ import org.mockito.MockitoAnnotations;
 
 import org.zalando.tarbela.nakadi.NakadiClient;
 import org.zalando.tarbela.nakadi.NakadiResponseCallback;
+import org.zalando.tarbela.nakadi.models.BatchItemResponse;
+import org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum;
 import org.zalando.tarbela.producer.EventRetriever;
 import org.zalando.tarbela.producer.EventStatusUpdater;
 import org.zalando.tarbela.producer.EventsWithNextPage;
@@ -50,6 +57,8 @@ public class EventServiceTest {
 
     private static final String EVENT_TYPE_1 = "exampleHappened";
     private static final String EVENT_TYPE_2 = "DataChanged";
+    private static final ImmutableMap<String, Object> PAYLOAD_1 = ImmutableMap.of("hello", "World");
+    private static final ImmutableMap<String, Object> PAYLOAD_2 = ImmutableMap.of("hello", "other world");
 
     @Mock
     private EventRetriever retriever;
@@ -57,10 +66,6 @@ public class EventServiceTest {
     private NakadiClient nakadiClient;
     @Mock
     private EventStatusUpdater updater;
-    @Mock
-    private EventsWithNextPage firstPage;
-    @Mock
-    private EventsWithNextPage secondPage;
 
     @Captor
     private ArgumentCaptor<NakadiResponseCallback> callbackCaptor;
@@ -75,66 +80,157 @@ public class EventServiceTest {
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
-        when(retriever.retrieveEvents()).thenReturn(firstPage);
-
     }
 
     @Test
-    public void testHappyCaseTwoEventsSameType() {
+    public void testHappyCaseTwoEventsSameTypeAreSubmittedTogether() {
 
         // setup
-        final ImmutableMap<String, Object> payLoad1 = ImmutableMap.of("hello", "World");
-        final ImmutableMap<String, Object> payLoad2 = ImmutableMap.of("hello", "other world");
-
-        when(firstPage.getEvents()).thenReturn(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", payLoad1),
-                makeEvent(EVENT_TYPE_1, "2", payLoad2)));
-        when(firstPage.nextPage()).thenReturn(Optional.empty());
-        doAnswer(invocation -> {
-                                    callbackCaptor.getValue().successfullyPublished();
-                                    return null;
-                                }).when(nakadiClient).submitEvents(anyString(), nakadiEventsCaptor.capture(),
-                                    callbackCaptor.capture());
-        doNothing().when(updater).updateStatuses(updatesCaptor.capture());
+        setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
+                makeEvent(EVENT_TYPE_1, "2", PAYLOAD_2)));
+        setupNakadiMock(callback -> { });
 
         // test
         service.publishEvents();
 
         // asserts
-        verify(nakadiClient).submitEvents(eq(EVENT_TYPE_1), eq(ImmutableList.of(payLoad1, payLoad2)),
+        verify(nakadiClient).submitEvents(eq(EVENT_TYPE_1), eq(ImmutableList.of(PAYLOAD_1, PAYLOAD_2)),
             any(NakadiResponseCallback.class));
+    }
+
+    @Test
+    public void testHappyCaseTwoEventsSameTypeAreUpdatedTogether() {
+
+        // setup
+        setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
+                makeEvent(EVENT_TYPE_1, "2", PAYLOAD_2)));
+        setupNakadiMock(callback -> callback.successfullyPublished());
+        setupUpdaterMock();
+
+        // test
+        service.publishEvents();
+
+        // asserts
         assertThat(updatesCaptor.getValue(),
             containsInAnyOrder(updateWithIdAndStatus("1", "SENT"), updateWithIdAndStatus("2", "SENT")));
     }
 
     @Test
-    public void testHappyCaseTwoEventsDifferentType() {
+    public void testHappyCaseTwoEventsDifferentTypeAreSubmittedSeparately() {
 
         // setup
-        final ImmutableMap<String, Object> payLoad1 = ImmutableMap.of("hello", "World");
-        final ImmutableMap<String, Object> payLoad2 = ImmutableMap.of("hello", "other world");
-
-        when(firstPage.getEvents()).thenReturn(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", payLoad1),
-                makeEvent(EVENT_TYPE_2, "2", payLoad2)));
-        when(firstPage.nextPage()).thenReturn(Optional.empty());
-        doAnswer(invocation -> {
-                                    callbackCaptor.getValue().successfullyPublished();
-                                    return null;
-                                }).when(nakadiClient).submitEvents(anyString(), nakadiEventsCaptor.capture(),
-                                    callbackCaptor.capture());
-        doNothing().when(updater).updateStatuses(updatesCaptor.capture());
+        setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
+                makeEvent(EVENT_TYPE_2, "2", PAYLOAD_2)));
+        setupNakadiMock(callback -> { });
 
         // test
         service.publishEvents();
 
         // asserts
-        verify(nakadiClient).submitEvents(eq(EVENT_TYPE_1), eq(ImmutableList.of(payLoad1)),
+        verify(nakadiClient).submitEvents(eq(EVENT_TYPE_1), eq(ImmutableList.of(PAYLOAD_1)),
             any(NakadiResponseCallback.class));
-        verify(nakadiClient).submitEvents(eq(EVENT_TYPE_2), eq(ImmutableList.of(payLoad2)),
+        verify(nakadiClient).submitEvents(eq(EVENT_TYPE_2), eq(ImmutableList.of(PAYLOAD_2)),
             any(NakadiResponseCallback.class));
+    }
+
+    @Test
+    public void testHappyCaseTwoEventsDifferentTypeAreUpdatedSeparately() {
+
+        // setup
+
+        setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
+                makeEvent(EVENT_TYPE_2, "2", PAYLOAD_2)));
+        setupNakadiMock(callback -> callback.successfullyPublished());
+        setupUpdaterMock();
+
+        // test
+        service.publishEvents();
+
+        // asserts
         verify(updater, times(2)).updateStatuses(anyListOf(EventUpdate.class));
         assertThat(updatesCaptor.getAllValues(),
             containsInAnyOrder(contains(updateWithIdAndStatus("1", "SENT")),
                 contains(updateWithIdAndStatus("2", "SENT"))));
+    }
+
+    @Test
+    public void testValidationProblem() {
+        // setup
+
+        setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
+                makeEvent(EVENT_TYPE_1, "2", PAYLOAD_2)));
+
+        final List<BatchItemResponse> responses = ImmutableList.of(makeResponse(ABORTED),
+                makeResponse(FAILED, "spaces are not allowed!"));
+        setupNakadiMock(callback -> callback.validationProblem(responses));
+        setupUpdaterMock();
+
+        // test
+        service.publishEvents();
+
+        // assert
+        assertThat(updatesCaptor.getAllValues(), contains(contains(updateWithIdAndStatus("2", "ERROR"))));
+    }
+
+    // ---------- Mock setup --------
+
+    /**
+     * Sets up the mock for the updater to accept anything and capture it in the updatesCaptor.
+     */
+    private void setupUpdaterMock() {
+        doNothing().when(updater).updateStatuses(updatesCaptor.capture());
+    }
+
+    /**
+     * Sets up the retriever mock to return a page with the first argument's list of events, with possibly the following
+     * arguments as the next pages.
+     */
+    //J- Jalopy insists on removing the final, while the compiler insists of it being here.
+    @SafeVarargs
+    private final void
+    //J+
+    setupRetrieverMockWithPages(final List<Event>... pages) {
+        EventsWithNextPage currentPage = mock(EventsWithNextPage.class);
+        when(retriever.retrieveEvents()).thenReturn(currentPage);
+
+        EventsWithNextPage previousPage = null;
+        for (final List<Event> list : pages) {
+            when(currentPage.getEvents()).thenReturn(list);
+
+            final EventsWithNextPage next = mock(EventsWithNextPage.class);
+            when(currentPage.nextPage()).thenReturn(Optional.of(next));
+            previousPage = currentPage;
+            currentPage = next;
+        }
+
+        when(previousPage.nextPage()).thenReturn(Optional.empty());
+    }
+
+    /**
+     * Sets up the Nakadi client mock to accept any submit calls, capturing the events and passing the callback to the
+     * given callback consumer (which is expected to call one of the callback's methods).
+     *
+     * @param  callbackConsumer
+     */
+    private void setupNakadiMock(final Consumer<NakadiResponseCallback> callbackConsumer) {
+        doAnswer(invocation -> {
+                                    callbackConsumer.accept(callbackCaptor.getValue());
+                                    return null;
+                                }).when(nakadiClient).submitEvents(anyString(), nakadiEventsCaptor.capture(),
+                                    callbackCaptor.capture());
+    }
+
+    // ------------ test data ---------
+
+    private BatchItemResponse makeResponse(final PublishingStatusEnum status, final String detail) {
+        final BatchItemResponse result = new BatchItemResponse();
+        result.setPublishingStatus(status);
+        result.setDetail(detail);
+        return result;
+    }
+
+    private BatchItemResponse makeResponse(final PublishingStatusEnum status) {
+        return makeResponse(status, null);
     }
 
     private Event makeEvent(final String eventType, final String eId, final Map<String, Object> payload) {
@@ -148,6 +244,8 @@ public class EventServiceTest {
         e.setEventPayload(new HashMap<>(payload));
         return e;
     }
+
+    // -------- matchers ---------
 
     @SafeVarargs
     private static <X> Matcher<Iterable<? extends X>> containsInAnyOrder(final Matcher<X>... matchers) {
