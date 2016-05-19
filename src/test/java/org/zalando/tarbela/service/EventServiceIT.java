@@ -1,6 +1,13 @@
 package org.zalando.tarbela.service;
 
+import static java.util.stream.Collectors.joining;
+
 import static org.hamcrest.Matchers.is;
+
+import static org.springframework.http.HttpStatus.MULTI_STATUS;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.parseMediaType;
 
 import static org.springframework.test.web.client.MockRestServiceServer.createServer;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
@@ -8,6 +15,9 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
+import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.ABORTED;
+import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.FAILED;
+import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.SUBMITTED;
 import static org.zalando.tarbela.util.StringConstants.CONTENT_TYPE_BUNCH_OF_EVENTS;
 import static org.zalando.tarbela.util.StringConstants.CONTENT_TYPE_BUNCH_OF_EVENT_UPDATES;
 
@@ -17,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -34,6 +45,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.ResponseActions;
+import org.springframework.test.web.client.ResponseCreator;
 import org.springframework.test.web.client.match.MockRestRequestMatchers;
 import org.springframework.test.web.client.response.MockRestResponseCreators;
 
@@ -41,6 +53,7 @@ import org.springframework.web.client.RestTemplate;
 
 import org.zalando.tarbela.nakadi.NakadiClient;
 import org.zalando.tarbela.nakadi.NakadiClientImpl;
+import org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum;
 import org.zalando.tarbela.producer.EventRetriever;
 import org.zalando.tarbela.producer.EventRetrieverImpl;
 import org.zalando.tarbela.producer.EventStatusUpdater;
@@ -60,9 +73,9 @@ public class EventServiceIT {
 
     private static final String NAKADI_URI_TEMPLATE = "https://nakadi.example.org/event-types/{type_id}/events";
     private static final URI PRODUCER_URI = URI.create("https://producer.example.org/events");
-    private static final MediaType PRODUCER_EVENT_MEDIA_TYPE = MediaType.parseMediaType(CONTENT_TYPE_BUNCH_OF_EVENTS);
-    private static final MediaType PRODUCER_EVENT_UPDATE_MEDIA_TYPE = MediaType.parseMediaType(
-            CONTENT_TYPE_BUNCH_OF_EVENT_UPDATES);
+    private static final MediaType PRODUCER_EVENT_MEDIA_TYPE = parseMediaType(CONTENT_TYPE_BUNCH_OF_EVENTS);
+    private static final MediaType PRODUCER_EVENT_UPDATE_MEDIA_TYPE = //
+        parseMediaType(CONTENT_TYPE_BUNCH_OF_EVENT_UPDATES);
 
     @Autowired
     private RestTemplate producerGetRestTemplate;
@@ -71,7 +84,12 @@ public class EventServiceIT {
     @Autowired
     private RestTemplate nakadiRestTemplate;
 
-    // we can't have those as beans, because they need to be reinitialized for each expect/verify cycle.
+    // We can't have those as beans, because they need to be reinitialized for each expect/verify cycle.
+    //
+    // We are using three servers (with three templates), because with just one the server enforces the
+    // same order of the requests as in the expects.  https://jira.spring.io/browse/SPR-11365 introduces
+    // an .ignoreExpectOrder() which makes things more flexible, but this will only appear in version 4.3,
+    // which is not yet released (as of 2016-0-19) – I don't want to use the release candidates.
     private MockRestServiceServer producerGetMock;
     private MockRestServiceServer producerPatchMock;
     private MockRestServiceServer nakadiMock;
@@ -121,6 +139,43 @@ public class EventServiceIT {
         producerGetMock.verify();
         producerPatchMock.verify();
         nakadiMock.verify();
+    }
+
+    @Test
+    public void partialFailures() {
+        setupRetrieverMockWithPages( //
+            ImmutableList.of(makeEvent("A", "1"), makeEvent("A", "2"), makeEvent("A", "3")),
+            ImmutableList.of(makeEvent("A", "4"), makeEvent("A", "5"), makeEvent("A", "6")));
+
+        expectNakadiCall("A", event("A", "1"), event("A", "2"), event("A", "3")) //
+        .andRespond(withPartialSuccess(SUBMITTED, FAILED, ABORTED));
+        expectNakadiCall("A", event("A", "4"), event("A", "5"), event("A", "6")) //
+        .andRespond(withValidationFailure(ABORTED, FAILED, ABORTED));
+
+        expectProducerUpdateCall(update("1", "SENT"), update("2", "ERROR")).andRespond(withSuccess());
+        expectProducerUpdateCall(update("5", "ERROR")).andRespond(withSuccess());
+
+        service.publishEvents();
+
+        producerGetMock.verify();
+        producerPatchMock.verify();
+        nakadiMock.verify();
+    }
+
+    private static ResponseCreator withPartialSuccess(final PublishingStatusEnum... statuses) {
+        return MockRestResponseCreators.withStatus(MULTI_STATUS).contentType(APPLICATION_JSON).body(
+                formatAsBatchItemResponses(statuses));
+    }
+
+    private static ResponseCreator withValidationFailure(final PublishingStatusEnum... statuses) {
+        return MockRestResponseCreators.withStatus(UNPROCESSABLE_ENTITY).contentType(APPLICATION_JSON).body(
+                formatAsBatchItemResponses(statuses));
+    }
+
+    private static String formatAsBatchItemResponses(final PublishingStatusEnum[] statuses) {
+        return Stream.of(statuses)                                                //
+                     .map(status -> "{\"publishing_status\":\"" + status + "\"}") //
+                     .collect(joining(",", "[", "]"));
     }
 
     //J- Jalopy removes the `final`, but the compiler needs it for `@SafeVarargs`.
