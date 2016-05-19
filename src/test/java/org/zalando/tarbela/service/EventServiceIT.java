@@ -86,8 +86,6 @@ public class EventServiceIT {
         producerGetMock = createServer(producerGetRestTemplate);
         producerPatchMock = createServer(producerPatchRestTemplate);
         nakadiMock = createServer(nakadiRestTemplate);
-
-        // TODO: setup mocks/captures
         jsonMapper = new ObjectMapper();
     }
 
@@ -181,7 +179,7 @@ public class EventServiceIT {
         int counter = 1;
 
         for (final List<Event> list : pages) {
-            final URI nextUrl = PRODUCER_URI.resolve("?cursor=" + counter);
+            final URI nextUrl = URI.create(PRODUCER_URI + "?cursor=" + counter);
             final String body = formatEventsAsJson(list, nextUrl);
             producerGetMock.expect(MockRestRequestMatchers.requestTo(currentUrl))
                            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET)).andRespond(

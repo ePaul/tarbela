@@ -74,7 +74,6 @@ public class EventRetrieverImpl implements EventRetriever {
                 requestEntity, BunchOfEvents.class);
         final BunchOfEvents bunch = response.getBody();
         return new EventsWithNextPageImpl(bunch.getEvents(), nextRetriever(bunch));
-            // TODO: do we need to handle exceptions here?
     }
 
     private Optional<EventRetriever> nextRetriever(final BunchOfEvents bunch) {
