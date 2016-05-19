@@ -1,5 +1,7 @@
 package org.zalando.tarbela.producer;
 
+import static org.zalando.tarbela.util.StringConstants.CONTENT_TYPE_BUNCH_OF_EVENT_UPDATES;
+
 import java.net.URI;
 
 import java.util.List;
@@ -16,8 +18,7 @@ import org.zalando.tarbela.producer.models.EventUpdate;
 
 public class EventStatusUpdaterImpl implements EventStatusUpdater {
 
-    private static final MediaType UPDATE_MEDIA_TYPE = MediaType.parseMediaType(
-            "application/x.tarbela-event-list-update+json");
+    private static final MediaType UPDATE_MEDIA_TYPE = MediaType.parseMediaType(CONTENT_TYPE_BUNCH_OF_EVENT_UPDATES);
     private final RestOperations template;
     private final URI eventsUri;
 

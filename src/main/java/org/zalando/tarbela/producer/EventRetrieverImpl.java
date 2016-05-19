@@ -27,6 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EventRetrieverImpl implements EventRetriever {
 
+    private static final MediaType MEDIA_TYPE_PROBLEM = MediaType.parseMediaType(CONTENT_TYPE_PROBLEM_JSON);
+    private static final MediaType MEDIA_TYPE_EVENT_LIST = MediaType.parseMediaType(CONTENT_TYPE_BUNCH_OF_EVENTS);
+
     private final URI retrievalUrl;
     private final RestOperations restTemplate;
 
@@ -64,8 +67,7 @@ public class EventRetrieverImpl implements EventRetriever {
     @Override
     public EventsWithNextPage retrieveEvents() {
         final HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Arrays.asList(MediaType.parseMediaType(CONTENT_TYPE_PROBLEM_JSON),
-                MediaType.parseMediaType(CONTENT_TYPE_BUNCH_OF_EVENTS)));
+        headers.setAccept(Arrays.asList(MEDIA_TYPE_PROBLEM, MEDIA_TYPE_EVENT_LIST));
 
         final HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
         final ResponseEntity<BunchOfEvents> response = restTemplate.exchange(retrievalUrl, HttpMethod.GET,

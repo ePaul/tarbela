@@ -14,6 +14,8 @@ import static org.zalando.riptide.Conditions.on;
 import static org.zalando.riptide.Selectors.series;
 import static org.zalando.riptide.Selectors.status;
 
+import static org.zalando.tarbela.util.StringConstants.CONTENT_TYPE_PROBLEM_JSON;
+
 import java.io.IOException;
 
 import java.net.URI;
@@ -49,7 +51,7 @@ public class NakadiClientImpl implements NakadiClient {
     private static final TypeToken<List<BatchItemResponse>> BATCH_RESULT_TYPE_TOKEN =
         new TypeToken<List<BatchItemResponse>>() { };
 
-    private static final MediaType PROBLEM_MEDIA_TYPE = MediaType.parseMediaType("application/problem+json");
+    private static final MediaType PROBLEM_MEDIA_TYPE = MediaType.parseMediaType(CONTENT_TYPE_PROBLEM_JSON);
 
     private final String submissionUriTemplate;
     private final Rest rest;
