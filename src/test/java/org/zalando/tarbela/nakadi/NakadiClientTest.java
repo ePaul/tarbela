@@ -31,6 +31,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.ABORTED;
 import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.FAILED;
 import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.SUBMITTED;
+import static org.zalando.tarbela.util.StringConstants.CONTENT_TYPE_PROBLEM_JSON;
 
 import java.net.URI;
 
@@ -63,7 +64,7 @@ public class NakadiClientTest {
 
     private static final String EXAMPLE_EVENT_TYPE = "exampleType";
     private static final String URI_TEMPLATE_STRING = "https://example.org/event-types/{type_id}/events";
-    private static final MediaType APPLICATION_PROBLEM_JSON = parseMediaType("application/problem+json");
+    private static final MediaType APPLICATION_PROBLEM_JSON = parseMediaType(CONTENT_TYPE_PROBLEM_JSON);
 
     private NakadiClient client;
     private MockRestServiceServer mockServer;

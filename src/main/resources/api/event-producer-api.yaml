@@ -29,6 +29,9 @@ paths:
         Retrieve some of the new events. The response will support pagination
         by a `next` link, using a cursor, assuming there are actually more
         events.
+      produces:
+        - application/x.tarbela.event-list+json
+        - application/problem+json
       parameters:
         - name: cursor
           in: query
@@ -78,6 +81,10 @@ paths:
         Updates the publishing statuses of some events. This is used to inform
         the producer when a event was successfully delivered to the event sink
         or when it couldn't be delivered.
+      consumes:
+        - application/x.tarbela.event-list-update+json
+      produces:
+        - application/problem+json
       responses:
         '200':
           description: OK, update was done. 
@@ -106,6 +113,10 @@ definitions:
 
   Bunch-of-Events:
     type: object
+    description:
+      A list of events, together with possibly a `next` link for pagination.
+      This object (when serialized to JSON) is known as
+      application/x.tarbela.event-list+json.
     properties:
       _links:
         type: object
@@ -194,6 +205,10 @@ definitions:
 
   Bunch-of-EventUpdates:
     type: object
+    description:
+      Updates to a list of events (= list of updates to events).
+      This object (when serialized to JSON) is known as
+      application/x.tarbela.event-list-update+json.
     properties:
       events:
         type: array
