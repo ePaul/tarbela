@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -57,7 +58,8 @@ public class EventServiceImpl implements EventService {
         // instead of grouping by channel (which produces groups of size one, because EventChannel doesn't implement
         // equals/hashCode), we group by channel's toString (which actually works for the generated classes).
         final Iterable<List<Event>> grouped = events.stream().collect(groupingBy(event ->
-                        event.getChannel().toString())).values();
+                                                                event.getChannel().toString(),
+                                                            TreeMap::new, toList())).values();
         for (final List<Event> group : grouped) {
             final String topicName = group.get(0).getChannel().getTopicName();
             submitGroupAndHandleResponse(group, topicName);
