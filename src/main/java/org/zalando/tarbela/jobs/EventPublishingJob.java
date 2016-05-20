@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 
 import org.zalando.tarbela.service.EventService;
 
+import org.zalando.tracer.Tracer;
+
 @Component
 public class EventPublishingJob {
 
@@ -17,9 +19,17 @@ public class EventPublishingJob {
     @Autowired
     private EventService service;
 
+    @Autowired
+    private Tracer tracer;
+
     @Scheduled(fixedRate = RATE)
     public void publishStuff() {
-        service.publishEvents();
+        tracer.start();
+        try {
+            service.publishEvents();
+        } finally {
+            tracer.stop();
+        }
     }
 
 }

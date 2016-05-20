@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.HttpStatus;
 
+import org.springframework.stereotype.Component;
+
 import org.zalando.tarbela.nakadi.NakadiClient;
 import org.zalando.tarbela.nakadi.NakadiResponseCallback;
 import org.zalando.tarbela.nakadi.models.BatchItemResponse;
@@ -26,6 +28,7 @@ import org.zalando.tarbela.util.ZipUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Component
 public class EventServiceImpl implements EventService {
 
     private static final String DELIVERY_STATUS_SENT = "SENT";
