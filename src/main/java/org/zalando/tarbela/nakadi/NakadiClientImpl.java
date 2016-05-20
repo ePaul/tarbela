@@ -15,6 +15,7 @@ import static org.zalando.riptide.Selectors.series;
 import static org.zalando.riptide.Selectors.status;
 
 import static org.zalando.tarbela.util.StringConstants.CONTENT_TYPE_PROBLEM_JSON;
+import static org.zalando.tarbela.util.StringConstants.CONTENT_TYPE_PROBLEM_JSON_UTF8;
 
 import java.io.IOException;
 
@@ -52,6 +53,7 @@ public class NakadiClientImpl implements NakadiClient {
         new TypeToken<List<BatchItemResponse>>() { };
 
     private static final MediaType PROBLEM_MEDIA_TYPE = MediaType.parseMediaType(CONTENT_TYPE_PROBLEM_JSON);
+    private static final MediaType PROBLEM_MEDIA_TYPE_UTF8 = MediaType.parseMediaType(CONTENT_TYPE_PROBLEM_JSON_UTF8);
 
     private final String submissionUriTemplate;
     private final Rest rest;
@@ -108,9 +110,11 @@ public class NakadiClientImpl implements NakadiClient {
 
                         // TODO: check if Nakadi actually sends application/problem+json back. Otherwise this won't work.
                         on(PROBLEM_MEDIA_TYPE, Problem.class).call(callback::clientError),
+                        on(PROBLEM_MEDIA_TYPE_UTF8, Problem.class).call(callback::clientError),
                         anyContentType().call(response -> callback.clientError(unknownProblem(response))))),
                 on(Series.SERVER_ERROR).dispatch(Selectors.contentType(),
-                    on(PROBLEM_MEDIA_TYPE, Problem.class).call(callback::serverError), //
+                    on(PROBLEM_MEDIA_TYPE, Problem.class).call(callback::serverError),      //
+                    on(PROBLEM_MEDIA_TYPE_UTF8, Problem.class).call(callback::serverError), //
                     anyContentType().call(response -> callback.serverError(unknownProblem(response)))));
     }
 }
