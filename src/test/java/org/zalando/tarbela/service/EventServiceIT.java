@@ -15,9 +15,9 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.ABORTED;
-import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.FAILED;
-import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.SUBMITTED;
+import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.aborted;
+import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.failed;
+import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.submitted;
 import static org.zalando.tarbela.util.StringConstants.CONTENT_TYPE_BUNCH_OF_EVENTS;
 import static org.zalando.tarbela.util.StringConstants.CONTENT_TYPE_BUNCH_OF_EVENT_UPDATES;
 
@@ -148,9 +148,9 @@ public class EventServiceIT {
             ImmutableList.of(makeEvent("A", "4"), makeEvent("A", "5"), makeEvent("A", "6")));
 
         expectNakadiCall("A", event("A", "1"), event("A", "2"), event("A", "3")) //
-        .andRespond(withPartialSuccess(SUBMITTED, FAILED, ABORTED));
+        .andRespond(withPartialSuccess(submitted, failed, aborted));
         expectNakadiCall("A", event("A", "4"), event("A", "5"), event("A", "6")) //
-        .andRespond(withValidationFailure(ABORTED, FAILED, ABORTED));
+        .andRespond(withValidationFailure(aborted, failed, aborted));
 
         expectProducerUpdateCall(update("1", "SENT"), update("2", "ERROR")).andRespond(withSuccess());
         expectProducerUpdateCall(update("5", "ERROR")).andRespond(withSuccess());

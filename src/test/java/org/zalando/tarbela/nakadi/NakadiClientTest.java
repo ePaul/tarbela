@@ -28,9 +28,9 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.ABORTED;
-import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.FAILED;
-import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.SUBMITTED;
+import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.aborted;
+import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.failed;
+import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.submitted;
 import static org.zalando.tarbela.util.StringConstants.CONTENT_TYPE_PROBLEM_JSON;
 
 import java.net.URI;
@@ -119,8 +119,8 @@ public class NakadiClientTest {
     @Test
     public void testSubmitEventsMultiStatus() {
         final String batchResponses =
-            ("[{`publishing_status`:`SUBMITTED`}, "
-                    + "{`publishing_status`:`FAILED`, `step`:`PUBLISHING`,`detail`:`database unavailable`}]") //
+            ("[{`publishing_status`:`submitted`}, "
+                    + "{`publishing_status`:`failed`, `step`:`publishing`,`detail`:`database unavailable`}]") //
             .replace('`', '"');
 
         mockServer.expect(anything()) //
@@ -133,17 +133,17 @@ public class NakadiClientTest {
 
         final List<BatchItemResponse> result = batchItemCaptor.getValue();
         assertThat(result, hasSize(2));
-        assertThat(result.get(0).getPublishingStatus(), is(SUBMITTED));
-        assertThat(result.get(1).getPublishingStatus(), is(FAILED));
-        assertThat(result.get(1).getStep(), is(StepEnum.PUBLISHING));
+        assertThat(result.get(0).getPublishingStatus(), is(submitted));
+        assertThat(result.get(1).getPublishingStatus(), is(failed));
+        assertThat(result.get(1).getStep(), is(StepEnum.publishing));
         assertThat(result.get(1).getDetail(), is("database unavailable"));
     }
 
     @Test
     public void testSubmitEventsValidationProblem() {
         final String batchResponses =
-            ("[{`publishing_status`:`ABORTED`}, "
-                    + "{`publishing_status`:`FAILED`, `step`:`VALIDATING`,`detail`:`not a data change event`}]") //
+            ("[{`publishing_status`:`aborted`}, "
+                    + "{`publishing_status`:`failed`, `step`:`validating`,`detail`:`not a data change event`}]") //
             .replace('`', '"');
 
         mockServer.expect(anything()) //
@@ -156,9 +156,9 @@ public class NakadiClientTest {
 
         final List<BatchItemResponse> result = batchItemCaptor.getValue();
         assertThat(result, hasSize(2));
-        assertThat(result.get(0).getPublishingStatus(), is(ABORTED));
-        assertThat(result.get(1).getPublishingStatus(), is(FAILED));
-        assertThat(result.get(1).getStep(), is(StepEnum.VALIDATING));
+        assertThat(result.get(0).getPublishingStatus(), is(aborted));
+        assertThat(result.get(1).getPublishingStatus(), is(failed));
+        assertThat(result.get(1).getStep(), is(StepEnum.validating));
         assertThat(result.get(1).getDetail(), is("not a data change event"));
     }
 

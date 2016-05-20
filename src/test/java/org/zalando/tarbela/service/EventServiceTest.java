@@ -15,9 +15,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.ABORTED;
-import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.FAILED;
-import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.SUBMITTED;
+import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.aborted;
+import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.failed;
+import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.submitted;
 
 import java.util.HashMap;
 import java.util.List;
@@ -217,8 +217,8 @@ public class EventServiceTest {
         setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
                 makeEvent(EVENT_TYPE_1, "2", PAYLOAD_2)));
 
-        final List<BatchItemResponse> responses = ImmutableList.of(makeResponse(ABORTED),
-                makeResponse(FAILED, "spaces are not allowed!"));
+        final List<BatchItemResponse> responses = ImmutableList.of(makeResponse(aborted),
+                makeResponse(failed, "spaces are not allowed!"));
         setupNakadiMock(callback -> callback.validationProblem(responses));
         setupUpdaterMock();
 
@@ -236,7 +236,7 @@ public class EventServiceTest {
         setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
                 makeEvent(EVENT_TYPE_1, "2", PAYLOAD_2)));
 
-        final List<BatchItemResponse> responses = ImmutableList.of(makeResponse(ABORTED), makeResponse(ABORTED));
+        final List<BatchItemResponse> responses = ImmutableList.of(makeResponse(aborted), makeResponse(aborted));
         setupNakadiMock(callback -> callback.validationProblem(responses));
         setupUpdaterMock();
 
@@ -254,8 +254,8 @@ public class EventServiceTest {
         setupRetrieverMockWithPages(ImmutableList.of(makeEvent(EVENT_TYPE_1, "1", PAYLOAD_1),
                 makeEvent(EVENT_TYPE_1, "2", PAYLOAD_2)));
 
-        final List<BatchItemResponse> responses = ImmutableList.of(makeResponse(SUBMITTED),
-                makeResponse(FAILED, "spaces are not allowed!"));
+        final List<BatchItemResponse> responses = ImmutableList.of(makeResponse(submitted),
+                makeResponse(failed, "spaces are not allowed!"));
         setupNakadiMock(callback -> callback.partiallySubmitted(responses));
         setupUpdaterMock();
 

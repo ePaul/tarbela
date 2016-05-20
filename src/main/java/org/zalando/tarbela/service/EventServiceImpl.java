@@ -113,18 +113,18 @@ public class EventServiceImpl implements EventService {
                                 update.setEventId(event.getEventId());
                                 switch (response.getPublishingStatus()) {
 
-                                    case ABORTED :
+                                    case aborted :
 
                                         // don't change the status.
                                         break;
 
-                                    case FAILED :
+                                    case failed :
                                         update.setDeliveryStatus(DELIVERY_STATUS_ERROR);
                                         log.error("event {} (with payload {}) could not be published to {}: {}",
                                             event.getEventId(), event.getEventPayload(), topicName, response);
                                         break;
 
-                                    case SUBMITTED :
+                                    case submitted :
                                         update.setDeliveryStatus(DELIVERY_STATUS_SENT);
                                         break;
 
