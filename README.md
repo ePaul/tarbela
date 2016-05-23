@@ -26,13 +26,13 @@ Tarbela needs some pieces of configuration to do its job. If you are using the p
 
 Tarbela currently is supposed to run in a STUPS-like setup on AWS. *(TODO: figure out how much of this actually depends on STUPS, and if we can support non-STUPS alternatives.)*
 
-Setting | Description | Environment variable | Spring property |
+Setting | Description | Environment variable, Spring property |
 --------|----------------------|-----------------|-------------
-Access Token URI | The Authentication Server URI where Tarbela can obtain OAuth2 access tokens for accessing the resource server. | `ACCESS_TOKEN_URI` | tokens.accessTokenUri
-Token Info URI | The Authentication Server URI where Tarbela can check which scopes an OAuth Token actually has. *(TODO: is this actually necessary?)* | `TOKEN_INFO_URI` | tokens.tokenInfoUri
-Credentials Directory | A directory where Tarbela (or actually the [Tokens](https://github.com/zalando-stups/tokens) library we are using internally) can get the credentials for fetching the access tokens. Those credentials are supposed to be rotated by [berry](https://github.com/zalando-stups/berry) regularly. When running in a Stups-Setup on Taupage, Taupage takes care of this. | `CREDENTIALS_DIR` | tokens.credentialsDirectory
-Event Producer URI | The URI implementing the producer API. (This is the full URI, including the `/events` part, but without any query parameters.) *In later versions, we'll have a different way of configuring this, to support several producers.* | `PRODUCER_EVENTS_URI` | producer.events.uri
-Event Sink URI | The URI implementing the event submission part of Nakadi's API. This is a template of the form `https://nakadi.example.org/event-types/{type}/events`. The `{type}` part will be replaced by the name of the event type for each event when trying to submit some events. *In later versions, we'll have a different way of configuring this, to support several sinks.* | `NAKADI_SUBMISSION_URI_TEMPLATE` | nakadi.submission.uriTemplate
+Access Token URI | The Authentication Server URI where Tarbela can obtain OAuth2 access tokens for accessing the resource server. | `ACCESS_TOKEN_URI`, tokens.accessTokenUri
+Token Info URI | The Authentication Server URI where Tarbela can check which scopes an OAuth Token actually has. *(TODO: is this actually necessary?)* | `TOKEN_INFO_URI`, tokens.tokenInfoUri
+Credentials Directory | A directory where Tarbela (or actually the [Tokens](https://github.com/zalando-stups/tokens) library we are using internally) can get the credentials for fetching the access tokens. Those credentials are supposed to be rotated by [berry](https://github.com/zalando-stups/berry) regularly. When running in a Stups-Setup on Taupage, Taupage takes care of this. | `CREDENTIALS_DIR`, tokens.credentialsDirectory
+Event Producer URI | The URI implementing the producer API. (This is the full URI, including the `/events` part, but without any query parameters.) *In later versions, we'll have a different way of configuring this, to support several producers.* | `PRODUCER_EVENTS_URI`, producer.events.uri
+Event Sink URI | The URI implementing the event submission part of Nakadi's API. This is a template of the form `https://nakadi.example.org/event-types/{type}/events`. The `{type}` part will be replaced by the name of the event type for each event when trying to submit some events. *In later versions, we'll have a different way of configuring this, to support several sinks.* | `NAKADI_SUBMISSION_URI_TEMPLATE`, nakadi.submission.uriTemplate
 
 
 
