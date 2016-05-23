@@ -40,7 +40,7 @@ Event Sink URI | The URI implementing the event submission part of Nakadi's API.
 
     $ mvn clean package
     
-This will build, run all unit and integration tests, and package everything up as a jar file.
+This will build, run all unit and integration tests, and package everything up as a jar file (target/tarbela.jar).
 
     $ mvn clean install
     
@@ -83,11 +83,25 @@ Push docker image:
     $ docker push registry/tarbela:0.1
 
 
-## To be done
+## ToDo lists
 
-* *TODO: we should push our released versions to the Zalando open source docker registry, and document here how to use the images from there.*
+There are some things we still need to do.
 
-* *TODO: describe how to run on STUPS in AWS (i.e. example Senza configuration).*
+Those are mainly to be done by the maintainers:
+
+* *We should push our released versions to the Zalando open source docker registry, and document here how to use the images from there.*
+* *Describe how to run on STUPS in AWS (i.e. example Senza configuration).*
+
+Other wishes for future versions – here we welcome contributions:
+
+* **Allow fetching from several event sources.**  The basic infrastructure for this is there (just have more EventRetrievers), but we need to figure out a way to configure this (preferably without having to change the docker image for each event source change/addition).
+
+* **Allow sending events to not just one event sink, but one of several ones.**  The Producer API has a "Sink identifier" in its channel definition, which would be mapped to the sink's URL by configuration. In the first step this would mean supporting several Nakadi installations (or installations of other software following the same event submission API), later we could add other sink types.
+
+* **Better error handling.**  Currently whenever a bunch of events couldn't be sent, we just set an ERROR status for the events which had failures, and ignore the aborted ones – those will then be tried again the next time.
+
+* **Follow Ordering constraints.**  Currently, we are sending events of each type in the same order they are in the producer's list  – but whenever one bunch of events failed, we continue with the next ones (and try the same bunch again later). This can produce out-of-order delivery of events. For some event types this is not a problem, but it might one for others. I guess an ordering requirement needs to be either configurable, or part of the producer API.
+
 
 ## License
 
