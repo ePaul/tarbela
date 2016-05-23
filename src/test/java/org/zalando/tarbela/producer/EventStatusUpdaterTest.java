@@ -9,6 +9,8 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
+import static org.zalando.tarbela.util.StringConstants.CONTENT_TYPE_BUNCH_OF_EVENT_UPDATES;
+
 import java.net.URI;
 
 import java.util.List;
@@ -33,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public class EventStatusUpdaterTest {
 
     private static final URI PRODUCER_EVENTS_URI = URI.create("https://example.org/events");
-    private static final MediaType UPDATE_MEDIA_TYPE = parseMediaType(" application/x.tarbela-event-list-update+json");
+    private static final MediaType UPDATE_MEDIA_TYPE = parseMediaType(CONTENT_TYPE_BUNCH_OF_EVENT_UPDATES);
 
     private EventStatusUpdater updater;
 
