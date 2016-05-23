@@ -19,7 +19,6 @@ import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStat
 import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.failed;
 import static org.zalando.tarbela.nakadi.models.BatchItemResponse.PublishingStatusEnum.submitted;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,6 +51,7 @@ import org.zalando.tarbela.producer.EventsWithNextPage;
 import org.zalando.tarbela.producer.models.Event;
 import org.zalando.tarbela.producer.models.EventChannel;
 import org.zalando.tarbela.producer.models.EventUpdate;
+import org.zalando.tarbela.util.EventPayload;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -379,7 +379,7 @@ public class EventServiceTest {
         final Event e = new Event();
         e.setChannel(channel);
         e.setEventId(eId);
-        e.setEventPayload(new HashMap<>(payload));
+        e.setEventPayload(new EventPayload(payload));
         return e;
     }
 

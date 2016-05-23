@@ -24,7 +24,6 @@ import static org.zalando.tarbela.util.StringConstants.CONTENT_TYPE_BUNCH_OF_EVE
 import java.net.URI;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -60,6 +59,7 @@ import org.zalando.tarbela.producer.EventStatusUpdater;
 import org.zalando.tarbela.producer.EventStatusUpdaterImpl;
 import org.zalando.tarbela.producer.models.Event;
 import org.zalando.tarbela.producer.models.EventChannel;
+import org.zalando.tarbela.util.EventPayload;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -212,11 +212,14 @@ public class EventServiceIT {
         channel.setTopicName(eventType);
         channel.setSinkIdentifier("zalando-nakadi");
 
-        final ImmutableMap<String, String> payload = ImmutableMap.of("type", eventType, "id", eId);
+        final EventPayload payload = new EventPayload();
+        payload.put("type", eventType);
+        payload.put("id", eId);
+
         final Event e = new Event();
         e.setChannel(channel);
         e.setEventId(eId);
-        e.setEventPayload(new HashMap<>(payload));
+        e.setEventPayload(payload);
         return e;
     }
 
