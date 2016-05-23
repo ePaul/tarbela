@@ -1,30 +1,54 @@
 # Tarbela
 
-The goal of the project is to provide a scalable, reliable and generic message publisher which supports the following features:
+Tarbela is a reliable generic event publisher.
 
-+ defines remote REST API to be implemented by event producers, and uses it for pulling messages from a remote event table
+## Which problem does this solve?
 
-+ pulls pending messages on a scheduled basis and directs the messages to its designated target (e.g. Nakadi)
+In a microservice architecture, some types of events need to be sent (to an event consumer application, or to some event bus which distributes it to the consumers) whenever some data is changing. If sending the event at the same time as updating the data in the database, we have the distributed transaction problem: Do we first send the event or first commit the change to the database? In either case we get problems when the second one fails for some reason.
 
-+ evaluates responses and detect errors when trying to send messages
+## How does this work?
 
-+ marks messages as sent or dead letters after a defined time of unsuccessful sending attempts, using the provided REST API
-  
-+ provides configuration for source queues and a possible target messaging system
+Our approach here is that we in the event producer commit both the event and whatever data change caused the event in the same transaction to the same database (but usually different tables). Then Tarbela (which is a separate application) fetches those events, tries to publish them to the event sink, and if that publishing was successful, informs the producer about the success (so the same event doesn't get sent again the next time).
 
-+ Tarbela itself is stateless, just uses a configuration defining from which URIs to fetch the events
+![](docs/tarbela-architecture-overview.png)
 
- 
-We are currently in a pre-alpha phase, there is nothing usable yet here.
+The Producer needs to implement a Tarbela-specific "Event producer API" (defined in this project as [an OpenAPI definition](src/main/resources/api/event-producer-api.yaml)).
+For each type of event sink, Tarbela knows those sink's API. *(Note: Currently just [Nakadi](https://github.com/zalando/nakadi) is supported, but other sinks are planned to be added.)*
+
+Tarbela's configuration lists all the producers and sinks with their types, URLs and needed authentication (i.e. which OAuth scopes need to be present in tokens to be sent there). *(Note: Currently we just support one Producer and one Consumer. We still have to figure out how to configure multiple ones.)*
+
+Tarbela itself has no (mutable) state.
+
+
+## What do I need to configure?
+
+Tarbela needs some pieces of configuration to do its job. If you are using the pre-built docker image (or a building the image as described below), you can pass those as environment variables. If you build your own image, you can configure the properties in a Spring YAML config file, like the application-dev.yml.
+
+Tarbela currently is supposed to run in a STUPS-like setup on AWS. *(TODO: figure out how much of this actually depends on STUPS, and if we can support non-STUPS alternatives.)*
+
+Setting | Description | Environment variable | Spring property |
+--------|----------------------|-----------------|-------------
+Access Token URI | The Authentication Server URI where Tarbela can obtain OAuth2 access tokens for accessing the resource server. | `ACCESS_TOKEN_URI` | tokens.accessTokenUri
+Token Info URI | The Authentication Server URI where Tarbela can check which scopes an OAuth Token actually has. *(TODO: is this actually necessary?)* | `TOKEN_INFO_URI` | tokens.tokenInfoUri
+Credentials Directory | A directory where Tarbela (or actually the [Tokens](https://github.com/zalando-stups/tokens) library we are using internally) can get the credentials for fetching the access tokens. Those credentials are supposed to be rotated by [berry](https://github.com/zalando-stups/berry) regularly. When running in a Stups-Setup on Taupage, Taupage takes care of this. | `CREDENTIALS_DIR` | tokens.credentialsDirectory
+Event Producer URI | The URI implementing the producer API. (This is the full URI, including the `/events` part, but without any query parameters.) *In later versions, we'll have a different way of configuring this, to support several producers.* | `PRODUCER_EVENTS_URI` | producer.events.uri
+Event Sink URI | The URI implementing the event submission part of Nakadi's API. This is a template of the form `https://nakadi.example.org/event-types/{type}/events`. The `{type}` part will be replaced by the name of the event type for each event when trying to submit some events. *In later versions, we'll have a different way of configuring this, to support several sinks.* | `NAKADI_SUBMISSION_URI_TEMPLATE` | nakadi.submission.uriTemplate
+
 
 
 ##How to build
 
+    $ mvn clean package
+    
+This will build, run all unit and integration tests, and package everything up as a jar file.
+
     $ mvn clean install
+    
+This will build, run all unit and integration tests, package everything up as a jar file, and install that in the local maven repository.
 
 ##How to run
 
-    $ # set env variables first
+    $ # set env variables first, see above
     $ mvn spring-boot:run 
 
 ##How to build a docker image
@@ -33,7 +57,7 @@ Build tarbela:
 
     $ mvn clean package -U
 
-Build scm-source.json:
+Build scm-source.json (with information about the commit being used):
 
     $ ./scm-source.sh
 
@@ -47,13 +71,31 @@ Show images:
 
 Run with docker with example env variable configuration (adapt to your use case, of course):
 
-    $ docker run -it -e ACCESS_TOKEN_URI='https://token.services.auth.zalando.com/oauth2/access_token?realm=/services' \
-                     -e TOKEN_INFO_URI='https://info.services.auth.zalando.com/oauth2/tokeninfo' \
+    $ docker run -it -e ACCESS_TOKEN_URI='...' \
+                     -e TOKEN_INFO_URI='...' \
                      -e CREDENTIALS_DIR='meta/credentials' \
-                     -e NAKADI_SUBMISSION_URI_TEMPLATE='https://nakadi-sandbox.aruha-test.zalan.do/event-type/{type}/submit' \
-                     -e PRODUCER_EVENTS_URI='https://warehouse-allocation-staging.wholesale.zalan.do/events' \
+                     -e NAKADI_SUBMISSION_URI_TEMPLATE='https://nakadi.example.org/event-types/{type}/events' \
+                     -e PRODUCER_EVENTS_URI='https://my-event-producer.example.org/events' \
                      registry/tarbela:0.1
-    
+
 Push docker image:
 
     $ docker push registry/tarbela:0.1
+
+
+## To be done
+
+* *TODO: we should push our released versions to the Zalando open source docker registry, and document here how to use the images from there.*
+
+* *TODO: describe how to run on STUPS in AWS (i.e. example Senza configuration).*
+
+## License
+
+The MIT License (MIT)
+Copyright © 2016 Zalando SE, https://tech.zalando.com
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
