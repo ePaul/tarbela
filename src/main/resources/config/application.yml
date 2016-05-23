@@ -7,6 +7,8 @@ tokens:
           scopes:
               - uid
               - warehouse-allocation.read
+        - tokenId: zalando-nakadi
+          scopes: nakadi.event_stream.write
 
 producer.events.uri: ${PRODUCER_EVENTS_URI}
 nakadi.submission.uriTemplate: ${NAKADI_SUBMISSION_URI_TEMPLATE}
