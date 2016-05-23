@@ -38,8 +38,6 @@ public class EventStatusUpdaterImpl implements EventStatusUpdater {
         final HttpEntity<BunchOfEventUpdates> requestEntity = new HttpEntity<>(bunch, headers);
 
         template.exchange(eventsUri, HttpMethod.PATCH, requestEntity, Void.class);
-
-        // TODO: exception handling here or wherever this is called?
     }
 
 }

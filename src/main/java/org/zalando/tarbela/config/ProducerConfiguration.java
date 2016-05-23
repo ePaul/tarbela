@@ -26,8 +26,11 @@ public class ProducerConfiguration {
 
     private static final String PRODUCER_TOKEN_NAME = "producer";
 
-    @Value("producer.event.uri")
-    private URI producerEventsURI;
+    @Value("${producer.events.uri}?status=NEW")
+    private URI producerGetEventsURI;
+
+    @Value("${producer.events.uri}")
+    private URI producerPatchEventsURI;
 
     @Autowired
     private HttpComponentsClientHttpRequestFactory requestFactory;
@@ -37,12 +40,12 @@ public class ProducerConfiguration {
 
     @Bean
     public EventRetriever eventRetriever() {
-        return new EventRetrieverImpl(producerEventsURI, createTemplate(PRODUCER_TOKEN_NAME));
+        return new EventRetrieverImpl(producerGetEventsURI, createTemplate(PRODUCER_TOKEN_NAME));
     }
 
     @Bean
     public EventStatusUpdater eventUpdater() {
-        return new EventStatusUpdaterImpl(producerEventsURI, createTemplate(PRODUCER_TOKEN_NAME));
+        return new EventStatusUpdaterImpl(producerPatchEventsURI, createTemplate(PRODUCER_TOKEN_NAME));
     }
 
     private RestOperations createTemplate(final String tokenName) {
