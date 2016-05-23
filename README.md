@@ -8,7 +8,7 @@ In a microservice architecture, some types of events need to be sent (to an even
 
 ## How does this work?
 
-Our approach here is that we in the event producer commit both the event and whatever data change caused the event in the same transaction to the same database (but usually different tables). Then Tarbela (which is a separate application) fetches those events, tries to publish them to the event sink, and if that publishing was successful, informs the producer about the success (so the same event doesn't get sent again the next time).
+Our approach here is that the event producer commits both the event and whatever data change caused the event in the same transaction to the same database (but usually different tables). Then Tarbela (which is a separate application) fetches those events, tries to publish them to the event sink, and if that publishing was successful, informs the producer about the success (so the same event doesn't get sent again the next time).
 
 ![](docs/tarbela-architecture-overview.png)
 
