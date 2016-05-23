@@ -154,7 +154,7 @@
                             <invokerPackage>org.zalando.tarbela.producer</invokerPackage>
                             <!-- the \u002c will be parsed as a comma by Javac,
                                  but this way it will survive the tokenization by codegen -->
-                            <type-mappings>EventPayload=java.util.HashMap&lt;String\u002c Object&gt;</type-mappings>
+                            <import-mappings>EventPayload=org.zalando.tarbela.util.EventPayload</import-mappings>
                           </configOptions>
                           <environmentVariables>
                              <models></models>
