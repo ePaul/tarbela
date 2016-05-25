@@ -24,7 +24,7 @@ Tarbela itself has no (mutable) state.
 
 Tarbela needs some pieces of configuration to do its job. If you are using the pre-built docker image (or a building the image as described below), you can pass those as environment variables. If you build your own image, you can configure the properties in a Spring YAML config file, like the application-dev.yml.
 
-Tarbela currently is supposed to run in a STUPS-like setup on AWS. *(TODO: figure out how much of this actually depends on STUPS, and if we can support non-STUPS alternatives.)*
+Tarbela currently is supposed to run on the [STUPS platform](https://stups.io/) on AWS. *(TODO: figure out how much of this actually depends on STUPS, and if we can support non-STUPS alternatives.)*
 
 Setting | Description | Environment variable, Spring property |
 --------|----------------------|-----------------|-------------
@@ -90,7 +90,7 @@ There are some things we still need to do.
 Those are mainly to be done by the maintainers:
 
 * We should push our released versions to the Zalando open source docker registry, and document here how to use the images from there. → [Issue #31](https://github.com/zalando/tarbela/issues/31)
-* Describe how to run on STUPS in AWS (i.e. example Senza configuration). → [Issue #32](https://github.com/zalando/tarbela/issues/32)
+* Describe how to run on the [STUPS platform](https://stups.io/) in AWS (i.e. example Senza configuration). → [Issue #32](https://github.com/zalando/tarbela/issues/32)
 * Figure out how much we actually depend on Stups, and potentially describe how to run in a non-Stups setting. → [Issue #33](https://github.com/zalando/tarbela/issues/33)
 
 Other wishes for future versions – here we welcome contributions:
