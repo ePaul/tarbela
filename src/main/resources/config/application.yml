@@ -1,18 +1,5 @@
-tokens:
-    accessTokenUri: ${ACCESS_TOKEN_URI}
-    tokenInfoUri:  ${TOKEN_INFO_URI}
-    credentialsDirectory: ${CREDENTIALS_DIR}
-    token-configuration-list:
-        - tokenId: producer
-          scopes:
-              - uid
-              - warehouse-allocation.read
-              - warehouse-allocation.event_log_write
-        - tokenId: zalando-nakadi
-          scopes: nakadi.event_stream.write
-
-producer.events.uri: ${PRODUCER_EVENTS_URI}
-nakadi.submission.uriTemplate: ${NAKADI_SUBMISSION_URI_TEMPLATE}
+# The tokens configuration is not in here anymore, as this will depend on each installation's details.
+# Have a look at README.md for some examples of how to do this.
 
 logbook:
   filter.enabled: true

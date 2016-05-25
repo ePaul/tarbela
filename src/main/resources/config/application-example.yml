@@ -1,0 +1,39 @@
+# Example configuration file with installation-specific runtime configuration.
+
+tokens:
+
+    # The authentication server URIs. Adapt to your use case.
+    accessTokenUri: https://token.services.auth.example.com/oauth2/access_token?realm=/services
+    tokenInfoUri: https://info.services.auth.example.com/oauth2/tokeninfo
+
+     # This is where Tarbela finds the credentials (user.json + client.json) to access
+     # the authentication server. Potentially needs to be adapted.
+    credentialsDirectory: /meta/credentials
+
+    token-configuration-list:
+          # scope configuration for access to the event producer. 
+        - tokenId:
+              # The id is currently hardcoded, don't change this.
+             producer
+          scopes:
+              # change those scopes to the ones needed by your producer API.
+              - uid
+              - event-producer.read-events
+              - event-producer.write-events
+
+          # scope configuration for access to the event sink (Nakadi): 
+        - tokenId:
+             # The id is currently hardcoded, don't change this.
+            zalando-nakadi
+          scopes:
+           # change those scopes to the ones needed by your Nakadi installation.
+           # The given one is the default for Zalando's productive one.
+           - nakadi.event_stream.write
+
+# The event producer URI, implementing the Tarbela Event Producer API. This will change for every
+# Tarbela installation.
+producer.events.uri: https://my-event-producer.example.com/events
+
+# The Event sink URI (i.e. one of the URI paths of a Nakadi installation).
+# This can be the same for several Tarbela installations (usually you'll have one per environment).
+nakadi.submission.uriTemplate: https://nakadi.example.com/event-types/{type}/events
