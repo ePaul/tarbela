@@ -22,17 +22,23 @@ Tarbela itself has no (mutable) state.
 
 ## What do I need to configure?
 
-Tarbela needs some pieces of configuration to do its job. If you are using the pre-built docker image (or a building the image as described below), you can pass those as environment variables. If you build your own image, you can configure the properties in a Spring YAML config file, like the application-dev.yml.
+Tarbela needs some pieces of configuration to do its job. If you are using the pre-built docker image (or a building the image as described below) or running directly with Java, you can pass those as environment variables (you can replace the `.` with `_`, as many OSes don't support dots: `tokens_accessTokenUri=https://...`). You can also pass the properties as command line arguments (like `--tokens.accessTokenUri=https://...`) or Java system properties (`-D tokens.accessTokenUri=https://...`.
+
+You can also pass all the properties as a JSON data structure, using the `--spring.application.json` command line argument or `SPRING_APPLICATION_JSON` environment variable. *(TODO: add example.)*
+
+If you build your own image, you can configure the properties in a Spring YAML config file, like the [application-example.yml](src/main/resources/config/application-example.yml).
 
 Tarbela currently is supposed to run on the [STUPS platform](https://stups.io/) on AWS. *(TODO: figure out how much of this actually depends on STUPS, and if we can support non-STUPS alternatives.)*
 
-Setting | Description | Environment variable, Spring property |
---------|----------------------|-----------------|-------------
-Access Token URI | The Authentication Server URI where Tarbela can obtain OAuth2 access tokens for accessing the resource server. | `ACCESS_TOKEN_URI`, tokens.accessTokenUri
-Token Info URI | The Authentication Server URI where Tarbela can check which scopes an OAuth Token actually has. *(TODO: is this actually necessary?)* | `TOKEN_INFO_URI`, tokens.tokenInfoUri
-Credentials Directory | A directory where Tarbela (or actually the [Tokens](https://github.com/zalando-stups/tokens) library we are using internally) can get the credentials for fetching the access tokens. Those credentials are supposed to be rotated by [berry](https://github.com/zalando-stups/berry) regularly. When running in a Stups-Setup on Taupage, Taupage takes care of this. | `CREDENTIALS_DIR`, tokens.credentialsDirectory
-Event Producer URI | The URI implementing the producer API. (This is the full URI, including the `/events` part, but without any query parameters.) *In later versions, we'll have a different way of configuring this, to support several producers.* | `PRODUCER_EVENTS_URI`, producer.events.uri
-Event Sink URI | The URI implementing the event submission part of Nakadi's API. This is a template of the form `https://nakadi.example.org/event-types/{type}/events`. The `{type}` part will be replaced by the name of the event type for each event when trying to submit some events. *In later versions, we'll have a different way of configuring this, to support several sinks.* | `NAKADI_SUBMISSION_URI_TEMPLATE`, nakadi.submission.uriTemplate
+Setting | Description | Property name
+--------|----------------------|--------------
+Access Token URI | The Authentication Server URI where Tarbela can obtain OAuth2 access tokens for accessing the resource server. | tokens.accessTokenUri
+Token Info URI | The Authentication Server URI where Tarbela can check which scopes an OAuth Token actually has. *(TODO: is this actually necessary?)* | tokens.tokenInfoUri
+Credentials Directory | A directory where Tarbela (or actually the [Tokens](https://github.com/zalando-stups/tokens) library we are using internally) can get the credentials for fetching the access tokens. Those credentials are supposed to be rotated by [berry](https://github.com/zalando-stups/berry) regularly. When running in a Stups-Setup on Taupage, Taupage takes care of mounting this data dir (and the berry setup). | tokens.credentialsDirectory
+Event Producer URI | The URI implementing the producer API. (This is the full URI, including the `/events` part, but without any query parameters.) *In later versions, we'll have a different way of configuring this, to support several producers.* | producer.events.uri
+Event Producer Scopes | A list of scope names which are needed to access the event producer. This is actually a list of properties with related names. (You will need to configure your authentication server such that Tarbela actually has permissions to all those scopes.) *In later versions, we'll have a different way of configuring this, to support several producers.* | tokens.token-configuration-list[0].tokenId=`producer`, tokens.token-configuration-list[0].scopes[0]=*first scope*, tokens.token-configuration-list[0].scopes[1]=*second scope*, ...
+Event Sink URI | The URI implementing the event submission part of Nakadi's API. This is a template of the form `https://nakadi.example.org/event-types/{type}/events`. The `{type}` part will be replaced by the name of the event type for each event when trying to submit some events. *In later versions, we'll have a different way of configuring this, to support several sinks.* | nakadi.submission.uriTemplate
+Event Sink Scopes | A list of scope names which are needed to access the event sink. This is actually a list of properties with related names. (You will need to configure your authentication server such that Tarbela actually has permissions to all those scopes.) *In later versions, we'll have a different way of configuring this, to support several sinks.* (For Zalando's Nakadi installation, this is just one scope: `nakadi.event_stream.write`.) | tokens.token-configuration-list[1].tokenId=`zalando-nakadi`, tokens.token-configuration-list[1].scopes[0]=*first scope*, tokens.token-configuration-list[1].scopes[1]=*second scope*, ...
 
 
 
@@ -48,8 +54,16 @@ This will build, run all unit and integration tests, package everything up as a 
 
 ##How to run
 
+Build and run in one command:
+
     $ # set env variables first, see above
-    $ mvn spring-boot:run 
+    $ mvn spring-boot:run
+    
+Or first build the jar file (as in the ["How to build" section](#how-to-build)), then run it:
+
+    $ # set env variables first, see above
+    $ java -jar target/tarbela.jar
+
 
 ##How to build a docker image
 
@@ -69,14 +83,68 @@ Show images:
 
     $ docker images
 
-Run with docker with example env variable configuration (adapt to your use case, of course):
+Run with docker with example env variable configuration (adapt to your use case, of course). (The ‹host-credentials-dir› is a directory where berry is putting the credentials for the authentication server – that one needs to be mounted as a volume in the container.) 
 
-    $ docker run -it -e ACCESS_TOKEN_URI='...' \
-                     -e TOKEN_INFO_URI='...' \
-                     -e CREDENTIALS_DIR='meta/credentials' \
-                     -e NAKADI_SUBMISSION_URI_TEMPLATE='https://nakadi.example.org/event-types/{type}/events' \
-                     -e PRODUCER_EVENTS_URI='https://my-event-producer.example.org/events' \
+    $ docker run -it -v '‹host-credentials-dir›:/meta/credentials' \
+                     -e tokens_credentialsDirectory='/meta/credentials' \
+                     -e tokens_accessTokenUri='...' \
+                     -e tokens_tokenInfoURI='...' \
+                     -e tokens_token-configuration-list[0]_tokenId='producer' \
+                     -e tokens_token-configuration-list[0]_scopes[0]='uid' \
+                     -e tokens_token-configuration-list[0]_scopes[1]='warehouse-allocation.read' \
+                     -e tokens_token-configuration-list[0]_scopes[2]='warehouse-allocation.event_log_write' \
+                     -e tokens_token-configuration-list[1]_tokenId='zalando-nakadi' \
+                     -e tokens_token-configuration-list[1]_scopes[0]='nakadi.event_stream.write' \
+                     -e nakadi_submission_uriTemplate='https://nakadi.example.org/event-types/{type}/events' \
+                     -e producer_events_uri='https://my-event-producer.example.org/events' \
                      registry/tarbela:0.1
+
+You can also pass the same configuration as command line arguments:
+
+    $ docker run -it -v '‹host-credentials-dir›:/meta/credentials' \
+                     registry/tarbela:0.1
+                     --tokens.credentialsDirectory='/meta/credentials' \
+                     --tokens.accessTokenUri='...' \
+                     --tokens.tokenInfoURI='...' \
+                     --tokens.token-configuration-list[0].tokenId='producer' \
+                     --tokens.token-configuration-list[0].scopes[0]='uid' \
+                     --tokens.token-configuration-list[0].scopes[1]='warehouse-allocation.read' \
+                     --tokens.token-configuration-list[0].scopes[2]='warehouse-allocation.event_log_write' \
+                     --tokens.token-configuration-list[1].tokenId='zalando-nakadi' \
+                     --tokens.token-configuration-list[1].scopes[0]='nakadi.event_stream.write' \
+                     --nakadi.submission.uriTemplate='https://nakadi.example.org/event-types/{type}/events' \
+                     --producer.events.uri='https://my-event-producer.example.org/events' \
+
+The same configuration in JSON format:
+
+    $ docker run -it -v '‹host-credentials-dir›:/meta/credentials' \
+                    -e SPRING_APPLICATION_JSON='{
+               "tokens": {
+                 "credentialsDirectory": "/meta/credentials",
+                 "accessTokenUri": "...",
+                 "tokenInfoUri": "...",
+                 "token-configuration-list": [
+                   {
+                     "tokenId": "producer",
+                     "scopes": [
+                        "uid",
+                        "warehouse-allocation.read",
+                        "warehouse-allocation.event_log_write"
+                     ]
+                   },
+                   {
+                     "tokenId": "zalando-nakadi",
+                     "scopes": [
+                        "nakadi.event_stream.write"
+                     ]
+                   }
+                 ]
+               },
+               "nakadi.submission.uriTemplate": "https://nakadi-sandbox.aruha-test.zalan.do/event-types/{type}/events",
+               "producer.events.uri": "https://warehouse-allocation-staging.wholesale.zalan.do/events"
+             }' \
+                     registry/tarbela:0.1
+
 
 Push docker image:
 
