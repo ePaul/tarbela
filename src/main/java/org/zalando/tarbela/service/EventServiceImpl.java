@@ -28,22 +28,23 @@ import org.zalando.tarbela.util.ZipUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Component
 public class EventServiceImpl implements EventService {
 
     private static final String DELIVERY_STATUS_SENT = "SENT";
     private static final String DELIVERY_STATUS_ERROR = "ERROR";
 
-    // TODO: have multiple retrievers later
-    @Autowired
     private EventRetriever retriever;
 
+    private EventStatusUpdater updater;
+
     // TODO: have multiple Nakadis (or other sinks) later.
-    @Autowired
     private NakadiClient nakadiClient;
 
-    @Autowired
-    private EventStatusUpdater updater;
+    public EventServiceImpl(final EventRetriever retriever, final EventStatusUpdater updater, final NakadiClient nakadiClient) {
+        this.retriever = retriever;
+        this.updater = updater;
+        this.nakadiClient = nakadiClient;
+    }
 
     @Override
     public void publishEvents() {
