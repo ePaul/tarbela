@@ -11,16 +11,6 @@ tokens:
     credentialsDirectory: /meta/credentials
 
     token-configuration-list:
-          # scope configuration for access to the event producer. 
-        - tokenId:
-              # The id is currently hardcoded, don't change this.
-             producer
-          scopes:
-              # change those scopes to the ones needed by your producer API.
-              - uid
-              - event-producer.read-events
-              - event-producer.write-events
-
           # scope configuration for access to the event sink (Nakadi): 
         - tokenId:
              # The id is currently hardcoded, don't change this.
@@ -32,6 +22,19 @@ tokens:
 
 # The event producer URI, implementing the Tarbela Event Producer API. This will change for every
 # Tarbela installation.
+producers:
+  name: warehouse-allocation-service
+    events.uri: https://my-event-producer.example.com/events
+    scheduling.interval: 120
+    scopes:
+      # change those scopes to the ones needed by your producer API.
+      - uid
+      - event-producer.read-events
+      - event-producer.write-events
+  employee-to-organizational-unit-assignment-service
+      events.uri: https://my-event-producer.example.com/events
+      schedulingInterval: 120
+
 producer.events.uri: https://my-event-producer.example.com/events
 
 # The Event sink URI (i.e. one of the URI paths of a Nakadi installation).
