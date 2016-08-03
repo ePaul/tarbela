@@ -9,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ProducerConfigurationDetails {
+public class ProducerProperties {
     private List<String> scopes;
     private int schedulingInterval;
     private URI eventsUri;

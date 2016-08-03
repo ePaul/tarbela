@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ProducerConfigurations {
-    private Map<String, ProducerConfigurationDetails> producers;
+    private Map<String, ProducerProperties> producers;
 
     private TokenInformation tokens;
 

@@ -20,14 +20,14 @@ import org.zalando.stups.oauth2.spring.client.StupsOAuth2RestTemplate;
 import org.zalando.stups.oauth2.spring.client.StupsTokensAccessTokenProvider;
 import org.zalando.stups.tokens.AccessTokens;
 
-import org.zalando.tarbela.config.util.ProducerConfigurationDetails;
+import org.zalando.tarbela.config.util.ProducerProperties;
 import org.zalando.tarbela.config.util.ProducerConfigurations;
 import org.zalando.tarbela.config.util.ProducerInteractor;
 import org.zalando.tarbela.producer.EventRetrieverImpl;
 import org.zalando.tarbela.producer.EventStatusUpdaterImpl;
 
 @Configuration
-@EnableConfigurationProperties(ProducerConfigurationDetails.class)
+@EnableConfigurationProperties(ProducerProperties.class)
 public class ProducerConfiguration {
     
     @Autowired
@@ -48,16 +48,16 @@ public class ProducerConfiguration {
         
         final List<ProducerInteractor> producerInteractors = new ArrayList<>();
         
-        producerConfigurations.getProducers().forEach((producerName, producerConfigurationDetails) -> 
+        producerConfigurations.getProducers().forEach((producerName, producerProperties) -> 
             producerInteractors.add(
                         new ProducerInteractor(
                             new EventRetrieverImpl(
-                                    producerConfigurationDetails.getEventsUri(),
+                                    producerProperties.getEventsUri(),
                                     createTemplate(producerName)), 
                             new EventStatusUpdaterImpl(
-                                    producerConfigurationDetails.getEventsUri(),
+                                    producerProperties.getEventsUri(),
                                     createTemplate(producerName)),
-                        producerConfigurationDetails.getSchedulingInterval()))
+                        producerProperties.getSchedulingInterval()))
         );
         
         return producerInteractors;
@@ -69,7 +69,7 @@ public class ProducerConfiguration {
     
     private void initializeAccessTokens(){
         final Map<String, List<String>> scopesMap = new HashMap<>();
-        producerConfigurations.getProducers().forEach((producerName, producerConfigurationDetails) -> scopesMap.put(producerName, producerConfigurationDetails.getScopes()));
+        producerConfigurations.getProducers().forEach((producerName, producerProperties) -> scopesMap.put(producerName, producerProperties.getScopes()));
         accessTokens = new AccessTokenProvider(scopesMap, producerConfigurations.getTokens().getCredentialsDirectory(), producerConfigurations.getTokens().getAccessTokenUri()).getAccessTokens();
     }
 }
