@@ -298,8 +298,9 @@ public class EventServiceIT {
         }
 
         @Bean
-        EventService eventService() {
-            return new EventServiceImpl();
+        EventService eventService(final EventRetriever eventRetriever, final EventStatusUpdater eventStatusUpdater,
+                final NakadiClient nakadiClient) {
+            return new EventServiceImpl(eventRetriever, eventStatusUpdater, nakadiClient);
         }
     }
 

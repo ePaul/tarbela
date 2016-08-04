@@ -1,5 +1,8 @@
 package org.zalando.tarbela.config.util;
 
+import java.net.URI;
+
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -14,6 +17,14 @@ public class ProducerConfigurations {
     private Map<String, ProducerProperties> producers;
 
     private TokenInformation tokens;
+
+    @Getter
+    @Setter
+    public class ProducerProperties {
+        private List<String> scopes;
+        private int schedulingInterval;
+        private URI eventsUri;
+    }
 
     @Getter
     @Setter

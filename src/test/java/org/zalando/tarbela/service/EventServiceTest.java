@@ -78,7 +78,7 @@ public class EventServiceTest {
     private ArgumentCaptor<List<EventUpdate>> updatesCaptor;
 
     @InjectMocks
-    private EventService service = new EventServiceImpl();
+    private EventService service = new EventServiceImpl(retriever, updater, nakadiClient);
 
     @Before
     public void setUp() throws Exception {

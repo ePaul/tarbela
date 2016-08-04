@@ -22,12 +22,11 @@ import org.zalando.stups.tokens.AccessTokens;
 
 import org.zalando.tarbela.config.util.ProducerConfigurations;
 import org.zalando.tarbela.config.util.ProducerInteractor;
-import org.zalando.tarbela.config.util.ProducerProperties;
 import org.zalando.tarbela.producer.EventRetrieverImpl;
 import org.zalando.tarbela.producer.EventStatusUpdaterImpl;
 
 @Configuration
-@EnableConfigurationProperties(ProducerProperties.class)
+@EnableConfigurationProperties(ProducerConfigurations.ProducerProperties.class)
 public class ProducerConfiguration {
 
     @Autowired
