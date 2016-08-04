@@ -23,19 +23,20 @@ tokens:
 # The event producer URI, implementing the Tarbela Event Producer API. This will change for every
 # Tarbela installation.
 producers:
-  name: warehouse-allocation-service
-    events.uri: https://my-event-producer.example.com/events
-    scheduling.interval: 120
+  producer-service-1:
+    events.uri: https://my-event-producer-1.example.com/events
+    scheduling.interval: 120000 # number of milliseconds between each job run
     scopes:
-      # change those scopes to the ones needed by your producer API.
       - uid
       - event-producer.read-events
       - event-producer.write-events
-  employee-to-organizational-unit-assignment-service
-      events.uri: https://my-event-producer.example.com/events
-      schedulingInterval: 120
-
-producer.events.uri: https://my-event-producer.example.com/events
+  producer-service-2:
+    events.uri: https://my-event-producer-2.example.com/events
+    scheduling.interval: 120000 # number of milliseconds between each job run
+    scopes:
+      - uid
+      - event-producer.read-events
+      - event-producer.write-events
 
 # The Event sink URI (i.e. one of the URI paths of a Nakadi installation).
 # This can be the same for several Tarbela installations (usually you'll have one per environment).
