@@ -12,11 +12,13 @@ public class ProducerInteractor {
     private final EventStatusUpdater eventStatusUpdater;
 
     private final int jobInterval;
+    private final String producerName;
 
     public ProducerInteractor(final EventRetriever eventRetriever, final EventStatusUpdater eventStatusUpdater,
-            final int jobInterval) {
+            final int jobInterval, final String producerName) {
         this.eventRetriever = eventRetriever;
         this.eventStatusUpdater = eventStatusUpdater;
         this.jobInterval = jobInterval;
+        this.producerName = producerName;
     }
 }

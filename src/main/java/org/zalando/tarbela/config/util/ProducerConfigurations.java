@@ -20,7 +20,7 @@ public class ProducerConfigurations {
 
     @Getter
     @Setter
-    public class ProducerProperties {
+    public static class ProducerProperties {
         private List<String> scopes;
         private int schedulingInterval;
         private URI eventsUri;

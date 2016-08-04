@@ -26,7 +26,7 @@ import org.zalando.tarbela.producer.EventRetrieverImpl;
 import org.zalando.tarbela.producer.EventStatusUpdaterImpl;
 
 @Configuration
-@EnableConfigurationProperties(ProducerConfigurations.ProducerProperties.class)
+@EnableConfigurationProperties(ProducerConfigurations.class)
 public class ProducerConfiguration {
 
     @Autowired
@@ -52,7 +52,7 @@ public class ProducerConfiguration {
                     new ProducerInteractor(
                         new EventRetrieverImpl(producerProperties.getEventsUri(), createTemplate(producerName)),
                         new EventStatusUpdaterImpl(producerProperties.getEventsUri(), createTemplate(producerName)),
-                        producerProperties.getSchedulingInterval())));
+                        producerProperties.getSchedulingInterval(), producerName)));
 
         return producerInteractors;
     }
