@@ -1,19 +1,20 @@
 package org.zalando.tarbela.jobs;
 
-import java.util.List;
-
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.scheduling.TaskScheduler;
 
 import org.springframework.stereotype.Component;
+
 import org.zalando.tarbela.config.util.ProducerInteractor;
+import org.zalando.tarbela.config.util.ProducerInteractorContainer;
 import org.zalando.tarbela.nakadi.NakadiClient;
 import org.zalando.tarbela.service.EventServiceImpl;
 
 import org.zalando.tracer.Tracer;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -22,7 +23,7 @@ public class JobInitializer implements InitializingBean {
     private TaskScheduler taskScheduler;
 
     @Autowired
-    private List<ProducerInteractor> producerInteractors;
+    private ProducerInteractorContainer producerInteractors;
 
     @Autowired
     private NakadiClient nakadiClient;
@@ -32,11 +33,12 @@ public class JobInitializer implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        producerInteractors.forEach(producerInteractor -> startJob(producerInteractor));
+        producerInteractors.getProducerInteractors().forEach(producerInteractor -> startJob(producerInteractor));
     }
 
     private void startJob(final ProducerInteractor interactor) {
         log.info("Starting job for producer: {}", interactor.getProducerName());
+
         final EventServiceImpl eventService = new EventServiceImpl(interactor.getEventRetriever(),
                 interactor.getEventStatusUpdater(), nakadiClient);
         taskScheduler.scheduleWithFixedDelay(() -> {

@@ -22,6 +22,7 @@ import org.zalando.stups.tokens.AccessTokens;
 
 import org.zalando.tarbela.config.util.ProducerConfigurations;
 import org.zalando.tarbela.config.util.ProducerInteractor;
+import org.zalando.tarbela.config.util.ProducerInteractorContainer;
 import org.zalando.tarbela.producer.EventRetrieverImpl;
 import org.zalando.tarbela.producer.EventStatusUpdaterImpl;
 
@@ -40,7 +41,7 @@ public class ProducerConfiguration {
     private AccessTokenProvider accessTokenProvider;
 
     @Bean
-    public List<ProducerInteractor> producerInteractors() {
+    public ProducerInteractorContainer producerInteractors() {
         if (accessTokens == null) {
             initializeAccessTokens();
         }
@@ -54,7 +55,7 @@ public class ProducerConfiguration {
                         new EventStatusUpdaterImpl(producerProperties.getEventsUri(), createTemplate(producerName)),
                         producerProperties.getSchedulingInterval(), producerName)));
 
-        return producerInteractors;
+        return new ProducerInteractorContainer(producerInteractors);
     }
 
     private RestOperations createTemplate(final String tokenName) {
