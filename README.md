@@ -119,30 +119,31 @@ The same configuration in JSON format:
 
     $ docker run -it -v '‹host-credentials-dir›:/meta/credentials' \
                     -e SPRING_APPLICATION_JSON='{
-               "tokens": {
-                 "credentialsDirectory": "/meta/credentials",
-                 "accessTokenUri": "...",
-                 "tokenInfoUri": "...",
-                 "token-configuration-list": [
-                   {
-                     "tokenId": "producer",
-                     "scopes": [
-                        "uid",
-                        "warehouse-allocation.read",
-                        "warehouse-allocation.event_log_write"
-                     ]
+                   "tokens": {
+                        "accessTokenUri": "...",
+                        "tokenInfoUri": "...",
+                        "credentialsDirectory": "/meta/credentials/",
+                        "token-configuration-list": [
+                            {
+                                "tokenId": "zalando-nakadi",
+                                "scopes": [
+                                "uid", "nakadi.event_stream.write"
+                                ]
+                            }
+                        ]
                    },
-                   {
-                     "tokenId": "zalando-nakadi",
-                     "scopes": [
-                        "nakadi.event_stream.write"
-                     ]
-                   }
-                 ]
-               },
-               "nakadi.submission.uriTemplate": "https://nakadi-sandbox.aruha-test.zalan.do/event-types/{type}/events",
-               "producer.events.uri": "https://warehouse-allocation-staging.wholesale.zalan.do/events"
-             }' \
+                   "producers":{
+                        "warehouse-service":{
+                            "eventsUri":"https://warehouse-allocation-staging.wholesale.zalan.do/events",
+                            "schedulingInterval":1000,
+                            "scopes":[
+                                "uid", "warehouse-allocation.read","warehouse-allocation.event_log_write"
+                            ]
+                        }
+                   },
+                   "nakadi.submission.uriTemplate":"https://nakadi-sandbox.aruha-test.zalan.do/event-types/{type}/events"
+                }
+' \
                      registry/tarbela:0.1
 
 
@@ -162,8 +163,6 @@ Those are mainly to be done by the maintainers:
 * Figure out how much we actually depend on Stups, and potentially describe how to run in a non-Stups setting. → [Issue #33](https://github.com/zalando/tarbela/issues/33)
 
 Other wishes for future versions – here we welcome contributions:
-
-* **Allow fetching from several event sources.**  The basic infrastructure for this is there (just have more EventRetrievers), but we need to figure out a way to configure this (preferably without having to change the docker image for each event source change/addition). → [#34](https://github.com/zalando/tarbela/issues/34)
 
 * **Allow sending events to not just one event sink, but one of several ones.**  The Producer API has a "Sink identifier" in its channel definition, which would be mapped to the sink's URL by configuration. In the first step this would mean supporting several Nakadi installations (or installations of other software following the same event submission API), later we could add other sink types. → [#35](https://github.com/zalando/tarbela/issues/35)
 
