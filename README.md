@@ -133,11 +133,18 @@ The same configuration in JSON format:
                             ]
                        },
                        "producers":{
-                            "warehouse-service":{
-                                "eventsUri":"https://warehouse-allocation-staging.wholesale.zalan.do/events",
+                            "producer-1-service":{
+                                "eventsUri":"https://producer-1.example.com/events",
                                 "schedulingInterval":1000,
                                 "scopes":[
-                                    "uid", "warehouse-allocation.read","warehouse-allocation.event_log_write"
+                                    "uid", "producer-1.read","producer-1.event_log_write"
+                                ]
+                            },
+                            "producer-2-service":{
+                                "eventsUri":"https://producer-2.example.com/events",
+                                "schedulingInterval":2000,
+                                "scopes":[
+                                    "uid", "producer-2.read","producer-2.event_log_write"
                                 ]
                             }
                        },
