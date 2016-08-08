@@ -119,30 +119,30 @@ The same configuration in JSON format:
 
     $ docker run -it -v '‹host-credentials-dir›:/meta/credentials' \
                     -e SPRING_APPLICATION_JSON='{
-                   "tokens": {
-                        "accessTokenUri": "...",
-                        "tokenInfoUri": "...",
-                        "credentialsDirectory": "/meta/credentials/",
-                        "token-configuration-list": [
-                            {
-                                "tokenId": "zalando-nakadi",
-                                "scopes": [
-                                "uid", "nakadi.event_stream.write"
+                       "tokens": {
+                            "accessTokenUri": "...",
+                            "tokenInfoUri": "...",
+                            "credentialsDirectory": "/meta/credentials/",
+                            "token-configuration-list": [
+                                {
+                                    "tokenId": "zalando-nakadi",
+                                    "scopes": [
+                                    "uid", "nakadi.event_stream.write"
+                                    ]
+                                }
+                            ]
+                       },
+                       "producers":{
+                            "warehouse-service":{
+                                "eventsUri":"https://warehouse-allocation-staging.wholesale.zalan.do/events",
+                                "schedulingInterval":1000,
+                                "scopes":[
+                                    "uid", "warehouse-allocation.read","warehouse-allocation.event_log_write"
                                 ]
                             }
-                        ]
-                   },
-                   "producers":{
-                        "warehouse-service":{
-                            "eventsUri":"https://warehouse-allocation-staging.wholesale.zalan.do/events",
-                            "schedulingInterval":1000,
-                            "scopes":[
-                                "uid", "warehouse-allocation.read","warehouse-allocation.event_log_write"
-                            ]
-                        }
-                   },
-                   "nakadi.submission.uriTemplate":"https://nakadi-sandbox.aruha-test.zalan.do/event-types/{type}/events"
-                }
+                       },
+                       "nakadi.submission.uriTemplate":"https://nakadi-sandbox.aruha-test.zalan.do/event-types/{type}/events"
+                    }
 ' \
                      registry/tarbela:0.1
 
