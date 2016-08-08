@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import org.zalando.tarbela.config.util.ProducerInteractor;
 import org.zalando.tarbela.config.util.ProducerInteractorContainer;
 import org.zalando.tarbela.nakadi.NakadiClient;
-import org.zalando.tarbela.service.EventServiceImpl;
+import org.zalando.tarbela.service.EventService;
 
 import org.zalando.tracer.Tracer;
 
@@ -39,7 +39,7 @@ public class JobInitializer implements InitializingBean {
     private void startJob(final ProducerInteractor interactor) {
         log.info("Starting job for producer: {}", interactor.getProducerName());
 
-        final EventServiceImpl eventService = new EventServiceImpl(interactor.getEventRetriever(),
+        final EventService eventService = new EventService(interactor.getEventRetriever(),
                 interactor.getEventStatusUpdater(), nakadiClient);
         taskScheduler.scheduleWithFixedDelay(() -> {
                 tracer.start();
