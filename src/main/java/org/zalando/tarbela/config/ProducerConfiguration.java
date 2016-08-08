@@ -36,35 +36,33 @@ public class ProducerConfiguration {
     @Autowired
     private HttpComponentsClientHttpRequestFactory requestFactory;
 
-    private AccessTokens accessTokens;
-
     @Bean
     public ProducerInteractorContainer producerInteractors() {
-        if (accessTokens == null) {
-            initializeAccessTokens();
-        }
+
+        final AccessTokens accessTokens = initializeAccessTokens();
+
 
         final List<ProducerInteractor> producerInteractors = new ArrayList<>();
 
         producerConfigurations.getProducers().forEach((producerName, producerProperties) ->
                 producerInteractors.add(
                     new ProducerInteractor(
-                        new EventRetrieverImpl(producerProperties.getEventsUri(), createTemplate(producerName)),
-                        new EventStatusUpdaterImpl(producerProperties.getEventsUri(), createTemplate(producerName)),
+                        new EventRetrieverImpl(producerProperties.getEventsUri(), createTemplate(producerName, accessTokens)),
+                        new EventStatusUpdaterImpl(producerProperties.getEventsUri(), createTemplate(producerName, accessTokens)),
                         producerProperties.getSchedulingInterval(), producerName)));
 
         return new ProducerInteractorContainer(producerInteractors);
     }
 
-    private RestOperations createTemplate(final String tokenName) {
+    private RestOperations createTemplate(final String tokenName,  final AccessTokens accessTokens) {
         return new StupsOAuth2RestTemplate(new StupsTokensAccessTokenProvider(tokenName, accessTokens), requestFactory);
     }
 
-    private void initializeAccessTokens() {
+    private AccessTokens initializeAccessTokens() {
         final Map<String, List<String>> scopesMap = new HashMap<>();
         producerConfigurations.getProducers().forEach((producerName, producerProperties) ->
                 scopesMap.put(producerName, producerProperties.getScopes()));
-        accessTokens = new AccessTokenProvider(scopesMap, producerConfigurations.getTokens().getCredentialsDirectory(),
+        return new AccessTokenProvider(scopesMap, producerConfigurations.getTokens().getCredentialsDirectory(),
                 producerConfigurations.getTokens().getAccessTokenUri()).getAccessTokens();
     }
 }
