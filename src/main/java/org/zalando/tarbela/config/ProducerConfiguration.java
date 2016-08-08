@@ -38,8 +38,6 @@ public class ProducerConfiguration {
 
     private AccessTokens accessTokens;
 
-    private AccessTokenProvider accessTokenProvider;
-
     @Bean
     public ProducerInteractorContainer producerInteractors() {
         if (accessTokens == null) {
