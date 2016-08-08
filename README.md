@@ -89,14 +89,19 @@ Run with docker with example env variable configuration (adapt to your use case,
                      -e tokens_credentialsDirectory='/meta/credentials' \
                      -e tokens_accessTokenUri='...' \
                      -e tokens_tokenInfoURI='...' \
-                     -e tokens_token-configuration-list[0]_tokenId='producer' \
-                     -e tokens_token-configuration-list[0]_scopes[0]='uid' \
-                     -e tokens_token-configuration-list[0]_scopes[1]='warehouse-allocation.read' \
-                     -e tokens_token-configuration-list[0]_scopes[2]='warehouse-allocation.event_log_write' \
-                     -e tokens_token-configuration-list[1]_tokenId='zalando-nakadi' \
-                     -e tokens_token-configuration-list[1]_scopes[0]='nakadi.event_stream.write' \
+                     -e tokens_token-configuration-list[0]_tokenId='zalando-nakadi' \
+                     -e tokens_token-configuration-list[0]_scopes[0]='nakadi.event_stream.write' \
+                     -e producers[0]_producer-1-service_eventsUri='https://producer-1.example.com/events'\
+                     -e producers[0]_producer-1-service_schedulingInterval=1000 \
+                     -e producers[0]_producer-1-service_scopes[0]='uid' \
+                     -e producers[0]_producer-1-service_scopes[1]='producer-1.read' \
+                     -e producers[0]_producer-1-service_scopes[2]='producer-1.event_log_write' \
+                     -e producers[1]_producer-2-service_eventsUri='https://producer-2.example.com/events'\
+                     -e producers[1]_producer-2-service_schedulingInterval=2000 \
+                     -e producers[1]_producer-2-service_scopes[0]='uid' \
+                     -e producers[1]_producer-2-service_scopes[1]='producer-2.read' \
+                     -e producers[1]_producer-2-service_scopes[2]='producer-2.event_log_write' \
                      -e nakadi_submission_uriTemplate='https://nakadi.example.org/event-types/{type}/events' \
-                     -e producer_events_uri='https://my-event-producer.example.org/events' \
                      registry/tarbela:0.1
 
 You can also pass the same configuration as command line arguments:
@@ -106,14 +111,19 @@ You can also pass the same configuration as command line arguments:
                      --tokens.credentialsDirectory='/meta/credentials' \
                      --tokens.accessTokenUri='...' \
                      --tokens.tokenInfoURI='...' \
-                     --tokens.token-configuration-list[0].tokenId='producer' \
-                     --tokens.token-configuration-list[0].scopes[0]='uid' \
-                     --tokens.token-configuration-list[0].scopes[1]='warehouse-allocation.read' \
-                     --tokens.token-configuration-list[0].scopes[2]='warehouse-allocation.event_log_write' \
-                     --tokens.token-configuration-list[1].tokenId='zalando-nakadi' \
-                     --tokens.token-configuration-list[1].scopes[0]='nakadi.event_stream.write' \
+                     --tokens.token-configuration-list[0].tokenId='zalando-nakadi' \
+                     --tokens.token-configuration-list[0].scopes[0]='nakadi.event_stream.write' \
+                     --producers[0].producer-1-service.eventsUri='https://producer-1.example.com/events'\
+                     --producers[0].producer-1-service.schedulingInterval=1000 \
+                     --producers[0].producer-1-service.scopes[0]='uid' \
+                     --producers[0].producer-1-service.scopes[1]='producer-1.read' \
+                     --producers[0].producer-1-service.scopes[2]='producer-1.event_log_write' \
+                     --producers[1].producer-2-service.eventsUri='https://producer-2.example.com/events'\
+                     --producers[1].producer-2-service.schedulingInterval=2000 \
+                     --producers[1].producer-2-service.scopes[0]='uid' \
+                     --producers[1].producer-2-service.scopes[1]='producer-2.read' \
+                     --producers[1].producer-2-service.scopes[2]='producer-2.event_log_write' \
                      --nakadi.submission.uriTemplate='https://nakadi.example.org/event-types/{type}/events' \
-                     --producer.events.uri='https://my-event-producer.example.org/events' \
 
 The same configuration in JSON format:
 
