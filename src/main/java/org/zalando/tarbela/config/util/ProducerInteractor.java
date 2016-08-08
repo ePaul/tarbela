@@ -5,6 +5,9 @@ import org.zalando.tarbela.producer.EventStatusUpdater;
 
 import lombok.Getter;
 
+/**
+ * This class contains all information needed by the {@link EventService} to interact with a producer.
+ */
 @Getter
 public class ProducerInteractor {
     private final EventRetriever eventRetriever;

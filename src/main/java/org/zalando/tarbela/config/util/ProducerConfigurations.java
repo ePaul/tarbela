@@ -10,6 +10,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * This class will be initialized and filled by Spring using the details of the Spring application configuration.
+ */
 @ConfigurationProperties
 @Getter
 @Setter
