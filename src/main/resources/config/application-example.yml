@@ -20,7 +20,8 @@ tokens:
            # The given one is the default for Zalando's productive one.
            - nakadi.event_stream.write
 
-# The event producer URI, implementing the Tarbela Event Producer API. This will change for every
+# The event producer configuration, a list of producers implementing the Tarbela Event Producer API, including 
+# required scopes to interact with these producers, as well as the fetch interval. This will change for every 
 # Tarbela installation.
 producers:
   producer-service-1:
