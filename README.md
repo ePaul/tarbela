@@ -89,14 +89,19 @@ Run with docker with example env variable configuration (adapt to your use case,
                      -e tokens_credentialsDirectory='/meta/credentials' \
                      -e tokens_accessTokenUri='...' \
                      -e tokens_tokenInfoURI='...' \
-                     -e tokens_token-configuration-list[0]_tokenId='producer' \
-                     -e tokens_token-configuration-list[0]_scopes[0]='uid' \
-                     -e tokens_token-configuration-list[0]_scopes[1]='warehouse-allocation.read' \
-                     -e tokens_token-configuration-list[0]_scopes[2]='warehouse-allocation.event_log_write' \
-                     -e tokens_token-configuration-list[1]_tokenId='zalando-nakadi' \
-                     -e tokens_token-configuration-list[1]_scopes[0]='nakadi.event_stream.write' \
+                     -e tokens_token-configuration-list[0]_tokenId='zalando-nakadi' \
+                     -e tokens_token-configuration-list[0]_scopes[0]='nakadi.event_stream.write' \
+                     -e producers[0]_producer-1-service_eventsUri='https://producer-1.example.com/events'\
+                     -e producers[0]_producer-1-service_schedulingInterval=1000 \
+                     -e producers[0]_producer-1-service_scopes[0]='uid' \
+                     -e producers[0]_producer-1-service_scopes[1]='producer-1.read' \
+                     -e producers[0]_producer-1-service_scopes[2]='producer-1.event_log_write' \
+                     -e producers[1]_producer-2-service_eventsUri='https://producer-2.example.com/events'\
+                     -e producers[1]_producer-2-service_schedulingInterval=2000 \
+                     -e producers[1]_producer-2-service_scopes[0]='uid' \
+                     -e producers[1]_producer-2-service_scopes[1]='producer-2.read' \
+                     -e producers[1]_producer-2-service_scopes[2]='producer-2.event_log_write' \
                      -e nakadi_submission_uriTemplate='https://nakadi.example.org/event-types/{type}/events' \
-                     -e producer_events_uri='https://my-event-producer.example.org/events' \
                      registry/tarbela:0.1
 
 You can also pass the same configuration as command line arguments:
@@ -106,43 +111,56 @@ You can also pass the same configuration as command line arguments:
                      --tokens.credentialsDirectory='/meta/credentials' \
                      --tokens.accessTokenUri='...' \
                      --tokens.tokenInfoURI='...' \
-                     --tokens.token-configuration-list[0].tokenId='producer' \
-                     --tokens.token-configuration-list[0].scopes[0]='uid' \
-                     --tokens.token-configuration-list[0].scopes[1]='warehouse-allocation.read' \
-                     --tokens.token-configuration-list[0].scopes[2]='warehouse-allocation.event_log_write' \
-                     --tokens.token-configuration-list[1].tokenId='zalando-nakadi' \
-                     --tokens.token-configuration-list[1].scopes[0]='nakadi.event_stream.write' \
+                     --tokens.token-configuration-list[0].tokenId='zalando-nakadi' \
+                     --tokens.token-configuration-list[0].scopes[0]='nakadi.event_stream.write' \
+                     --producers[0].producer-1-service.eventsUri='https://producer-1.example.com/events'\
+                     --producers[0].producer-1-service.schedulingInterval=1000 \
+                     --producers[0].producer-1-service.scopes[0]='uid' \
+                     --producers[0].producer-1-service.scopes[1]='producer-1.read' \
+                     --producers[0].producer-1-service.scopes[2]='producer-1.event_log_write' \
+                     --producers[1].producer-2-service.eventsUri='https://producer-2.example.com/events'\
+                     --producers[1].producer-2-service.schedulingInterval=2000 \
+                     --producers[1].producer-2-service.scopes[0]='uid' \
+                     --producers[1].producer-2-service.scopes[1]='producer-2.read' \
+                     --producers[1].producer-2-service.scopes[2]='producer-2.event_log_write' \
                      --nakadi.submission.uriTemplate='https://nakadi.example.org/event-types/{type}/events' \
-                     --producer.events.uri='https://my-event-producer.example.org/events' \
 
 The same configuration in JSON format:
 
     $ docker run -it -v '‹host-credentials-dir›:/meta/credentials' \
                     -e SPRING_APPLICATION_JSON='{
-               "tokens": {
-                 "credentialsDirectory": "/meta/credentials",
-                 "accessTokenUri": "...",
-                 "tokenInfoUri": "...",
-                 "token-configuration-list": [
-                   {
-                     "tokenId": "producer",
-                     "scopes": [
-                        "uid",
-                        "warehouse-allocation.read",
-                        "warehouse-allocation.event_log_write"
-                     ]
-                   },
-                   {
-                     "tokenId": "zalando-nakadi",
-                     "scopes": [
-                        "nakadi.event_stream.write"
-                     ]
-                   }
-                 ]
-               },
-               "nakadi.submission.uriTemplate": "https://nakadi-sandbox.aruha-test.zalan.do/event-types/{type}/events",
-               "producer.events.uri": "https://warehouse-allocation-staging.wholesale.zalan.do/events"
-             }' \
+                       "tokens": {
+                            "accessTokenUri": "...",
+                            "tokenInfoUri": "...",
+                            "credentialsDirectory": "/meta/credentials/",
+                            "token-configuration-list": [
+                                {
+                                    "tokenId": "zalando-nakadi",
+                                    "scopes": [
+                                    "uid", "nakadi.event_stream.write"
+                                    ]
+                                }
+                            ]
+                       },
+                       "producers":{
+                            "producer-1-service":{
+                                "eventsUri":"https://producer-1.example.com/events",
+                                "schedulingInterval":1000,
+                                "scopes":[
+                                    "uid", "producer-1.read","producer-1.event_log_write"
+                                ]
+                            },
+                            "producer-2-service":{
+                                "eventsUri":"https://producer-2.example.com/events",
+                                "schedulingInterval":2000,
+                                "scopes":[
+                                    "uid", "producer-2.read","producer-2.event_log_write"
+                                ]
+                            }
+                       },
+                       "nakadi.submission.uriTemplate":"https://nakadi-sandbox.aruha-test.zalan.do/event-types/{type}/events"
+                    }
+' \
                      registry/tarbela:0.1
 
 
@@ -162,8 +180,6 @@ Those are mainly to be done by the maintainers:
 * Figure out how much we actually depend on Stups, and potentially describe how to run in a non-Stups setting. → [Issue #33](https://github.com/zalando/tarbela/issues/33)
 
 Other wishes for future versions – here we welcome contributions:
-
-* **Allow fetching from several event sources.**  The basic infrastructure for this is there (just have more EventRetrievers), but we need to figure out a way to configure this (preferably without having to change the docker image for each event source change/addition). → [#34](https://github.com/zalando/tarbela/issues/34)
 
 * **Allow sending events to not just one event sink, but one of several ones.**  The Producer API has a "Sink identifier" in its channel definition, which would be mapped to the sink's URL by configuration. In the first step this would mean supporting several Nakadi installations (or installations of other software following the same event submission API), later we could add other sink types. → [#35](https://github.com/zalando/tarbela/issues/35)
 

@@ -1,9 +1,13 @@
 package org.zalando.tarbela.config;
 
-import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,40 +20,49 @@ import org.zalando.stups.oauth2.spring.client.StupsOAuth2RestTemplate;
 import org.zalando.stups.oauth2.spring.client.StupsTokensAccessTokenProvider;
 import org.zalando.stups.tokens.AccessTokens;
 
-import org.zalando.tarbela.producer.EventRetriever;
+import org.zalando.tarbela.config.util.ProducerConfigurations;
+import org.zalando.tarbela.config.util.ProducerInteractor;
+import org.zalando.tarbela.config.util.ProducerInteractorContainer;
 import org.zalando.tarbela.producer.EventRetrieverImpl;
-import org.zalando.tarbela.producer.EventStatusUpdater;
 import org.zalando.tarbela.producer.EventStatusUpdaterImpl;
 
 @Configuration
+@EnableConfigurationProperties(ProducerConfigurations.class)
 public class ProducerConfiguration {
 
-    private static final String PRODUCER_TOKEN_NAME = "producer";
-
-    @Value("${producer.events.uri}?status=NEW")
-    private URI producerGetEventsURI;
-
-    @Value("${producer.events.uri}")
-    private URI producerPatchEventsURI;
+    @Autowired
+    private ProducerConfigurations producerConfigurations;
 
     @Autowired
     private HttpComponentsClientHttpRequestFactory requestFactory;
 
-    @Autowired
-    private AccessTokens accessTokens;
-
     @Bean
-    public EventRetriever eventRetriever() {
-        return new EventRetrieverImpl(producerGetEventsURI, createTemplate(PRODUCER_TOKEN_NAME));
+    public ProducerInteractorContainer producerInteractors() {
+
+        final AccessTokens accessTokens = initializeAccessTokens();
+
+
+        final List<ProducerInteractor> producerInteractors = new ArrayList<>();
+
+        producerConfigurations.getProducers().forEach((producerName, producerProperties) ->
+                producerInteractors.add(
+                    new ProducerInteractor(
+                        new EventRetrieverImpl(producerProperties.getEventsUri(), createTemplate(producerName, accessTokens)),
+                        new EventStatusUpdaterImpl(producerProperties.getEventsUri(), createTemplate(producerName, accessTokens)),
+                        producerProperties.getSchedulingInterval(), producerName)));
+
+        return new ProducerInteractorContainer(producerInteractors);
     }
 
-    @Bean
-    public EventStatusUpdater eventUpdater() {
-        return new EventStatusUpdaterImpl(producerPatchEventsURI, createTemplate(PRODUCER_TOKEN_NAME));
-    }
-
-    private RestOperations createTemplate(final String tokenName) {
+    private RestOperations createTemplate(final String tokenName,  final AccessTokens accessTokens) {
         return new StupsOAuth2RestTemplate(new StupsTokensAccessTokenProvider(tokenName, accessTokens), requestFactory);
     }
 
+    private AccessTokens initializeAccessTokens() {
+        final Map<String, List<String>> scopesMap = new HashMap<>();
+        producerConfigurations.getProducers().forEach((producerName, producerProperties) ->
+                scopesMap.put(producerName, producerProperties.getScopes()));
+        return new AccessTokenProvider(scopesMap, producerConfigurations.getTokens().getCredentialsDirectory(),
+                producerConfigurations.getTokens().getAccessTokenUri()).getAccessTokens();
+    }
 }
