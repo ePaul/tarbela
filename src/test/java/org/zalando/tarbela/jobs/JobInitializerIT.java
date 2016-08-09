@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 
 import static com.google.common.collect.Lists.newArrayList;
 
+import java.util.Date;
+
 import org.junit.Test;
 
 import org.junit.runner.RunWith;
@@ -44,7 +46,7 @@ public class JobInitializerIT {
 
     @Test
     public void testEnsureMultipleJobsAreSpawned() throws Exception {
-        verify(taskScheduler, times(2)).scheduleWithFixedDelay(any(), anyLong());
+        verify(taskScheduler, times(2)).scheduleWithFixedDelay(any(), any(Date.class), anyLong());
     }
 
     public static class JobInitializerTestContext {

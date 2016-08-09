@@ -16,9 +16,13 @@ import org.zalando.tracer.Tracer;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Instant;
+import java.util.Date;
+
 @Slf4j
 @Component
 public class JobInitializer implements InitializingBean {
+    private static final int JOB_START_OFFSET_SECONDS = 5;
     @Autowired
     private TaskScheduler taskScheduler;
 
@@ -30,6 +34,8 @@ public class JobInitializer implements InitializingBean {
 
     @Autowired
     private Tracer tracer;
+    
+    private Instant lastJobStart = Instant.now();
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -50,6 +56,8 @@ public class JobInitializer implements InitializingBean {
                     tracer.stop();
                 }
             },
+            Date.from(lastJobStart),
             interactor.getJobInterval());
+        lastJobStart = lastJobStart.plusSeconds(JOB_START_OFFSET_SECONDS);
     }
 }
