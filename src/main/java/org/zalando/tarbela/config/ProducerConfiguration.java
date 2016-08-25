@@ -83,7 +83,7 @@ public class ProducerConfiguration {
             return new URIBuilder(uri).addParameter(QUERY_EVENT_STATUS_FILTER_NAME, QUERY_EVENT_STATUS_FILTER_VALUE)
                                       .build();
         } catch (URISyntaxException e) {
-            log.error("Failed to launch producer with event URI: " + uri);
+            log.error("Failed to construct producer URI with event filter from: " + uri);
             throw new IllegalStateException(e);
         }
     }
