@@ -77,6 +77,7 @@ public class ProducerConfiguration {
                 producerConfigurations.getTokens().getAccessTokenUri()).getAccessTokens();
     }
 
+    //TODO: figure out how to test this
     private URI addEventFilterQueryParameter(final URI uri) {
         try {
             return new URIBuilder(uri).addParameter(QUERY_EVENT_STATUS_FILTER_NAME, QUERY_EVENT_STATUS_FILTER_VALUE)
