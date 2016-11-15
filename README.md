@@ -12,10 +12,11 @@ Our approach here is that the event producer commits both the event and whatever
 
 ![](docs/tarbela-architecture-overview.png)
 
-The Producer needs to implement a Tarbela-specific "Event producer API" (defined in this project as [an OpenAPI definition](src/main/resources/api/event-producer-api.yaml)).
-For each type of event sink, Tarbela knows those sink's API. *(Note: Currently just [Nakadi](https://github.com/zalando/nakadi) is supported, but other sinks are planned to be added.)*
+The Producer needs to implement a Tarbela-specific "Event producer API" (defined in this project as [an OpenAPI definition](src/main/resources/api/event-producer-api.yaml)). There is a library [tarbela-producer-spring-boot-starter](https://github.com/zalando-incubator/tarbela-producer-spring-boot-starter/tree/master) for Spring-Boot projects which helps implementing this.
 
-Tarbela's configuration lists all the producers and sinks with their types, URLs and needed authentication (i.e. which OAuth scopes need to be present in tokens to be sent there). *(Note: Currently we just support one Producer and one Consumer. We still have to figure out how to configure multiple ones.)*
+For each type of event sink, Tarbela knows those sink's API URL. *(Note: Currently just [Nakadi](https://github.com/zalando/nakadi) is supported, but other sinks are planned to be added.)*
+
+Tarbela's configuration lists all the producers and sinks with their types, URLs and needed authentication (i.e. which OAuth scopes need to be present in tokens to be sent there). *(Note: Currently we just support one event sink (but multiple producers). We still have to figure out how to configure multiple ones.)*
 
 Tarbela itself has no (mutable) state.
 
