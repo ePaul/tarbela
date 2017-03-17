@@ -143,7 +143,7 @@ definitions:
       The actual event to be sent to Nakadi or other event sinks, in the
       format recognized by this sink. Tarbela will not modify this object,
       but simply send it as-is.
-    type: Object
+    type: object
     additionalProperties: {}
 
   Event:
@@ -267,6 +267,5 @@ definitions:
           An absolute URI that identifies the specific occurrence of the problem.
           It may or may not yield further information if dereferenced.
     required:
-      - type
       - title
       - status
