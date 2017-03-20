@@ -25,7 +25,7 @@ Tarbela itself has no (mutable) state.
 
 Tarbela needs some pieces of configuration to do its job. If you are using the pre-built docker image (or a building the image as described below) or running directly with Java, you can pass those as environment variables (you can replace the `.` with `_`, as many OSes don't support dots: `tokens_accessTokenUri=https://...`). You can also pass the properties as command line arguments (like `--tokens.accessTokenUri=https://...`) or Java system properties (`-D tokens.accessTokenUri=https://...`.
 
-You can also pass all the properties as a JSON data structure, using the `--spring.application.json` command line argument or `SPRING_APPLICATION_JSON` environment variable. *(TODO: add example.)*
+You can also pass all the properties as a JSON data structure, using the `--spring.application.json` command line argument or `SPRING_APPLICATION_JSON` environment variable. (See below for an example with docker run.)
 
 If you build your own image, you can configure the properties in a Spring YAML config file, like the [application-example.yml](src/main/resources/config/application-example.yml).
 
@@ -160,8 +160,7 @@ The same configuration in JSON format:
                             }
                        },
                        "nakadi.submission.uriTemplate":"https://nakadi-sandbox.aruha-test.zalan.do/event-types/{type}/events"
-                    }
-' \
+                    }' \
                      registry/tarbela:0.1
 
 
