@@ -1,3 +1,9 @@
+***Deprecated:** This project is deprecated, and will not be developed further by us. It will likely be removed from Zalando's public Github account in the near future. If you are a user and want to take over maintainership, please contact us.*
+
+If your producer application is based on Spring-Boot, please consider using our [Nakadi Producer Spring Boot starter](https://github.com/zalando-incubator/nakadi-producer-spring-boot-starter/) library instead – it follows the same idea as this application, but includes the logic of both producer and Tarbela, omitting the REST API inbetween.
+
+-------
+
 # Tarbela
 
 Tarbela is a reliable generic event publisher.
